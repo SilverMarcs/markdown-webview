@@ -173,13 +173,14 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         
         /// Disables scrolling.
         #if os(macOS)
-        public override func scrollWheel(with event: NSEvent) {
-//            if event.deltaY == 0 {
-//                super.scrollWheel(with: event)
-//            } else {
-                self.nextResponder?.scrollWheel(with: event)
-//            }
-        }
+        override public func scrollWheel(with event: NSEvent) {
+             if abs(event.deltaX) >= 1 {
+                 super.scrollWheel(with: event)
+                 nextResponder?.scrollWheel(with: event)
+             } else {
+                 nextResponder?.scrollWheel(with: event)
+             }
+         }
         #endif
         
         /// Removes "Reload" from the context menu.
