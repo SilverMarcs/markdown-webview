@@ -113,7 +113,8 @@ import WebKit
                 let htmlString = templateString
                     .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
                     .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: self.parent.customStylesheet ?? defaultStylesheet)
-                platformView.loadHTMLString(htmlString, baseURL: nil)
+                let baseURL = URL(string: "GPTalks Web Content")
+                platformView.loadHTMLString(htmlString, baseURL: baseURL)
             }
 
             /// Update the content on first finishing loading.
