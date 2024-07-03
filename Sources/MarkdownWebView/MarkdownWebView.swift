@@ -56,7 +56,7 @@ import WebKit
             .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
         }
 
-        public class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+        public class Coordinator: NSObject, WKNavigationDelegate {
             let parent: MarkdownWebView
             let platformView: CustomWebView
 
@@ -88,12 +88,6 @@ import WebKit
                 #elseif os(iOS)
                     platformView.isOpaque = false
                 #endif
-
-                /// Receive messages from the web view.
-                platformView.configuration.userContentController = .init()
-                platformView.configuration.userContentController.add(self, name: "sizeChangeHandler")
-                platformView.configuration.userContentController.add(self, name: "renderedContentHandler")
-                platformView.configuration.userContentController.add(self, name: "copyToPasteboard")
 
                 #if os(macOS)
                     let defaultStylesheetFileName = "default-macOS"
@@ -143,29 +137,6 @@ import WebKit
                     return .allow
                 }
             }
-
-            public func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
-                switch message.name {
-                case "sizeChangeHandler":
-                    guard let contentHeight = message.body as? CGFloat,
-                          platformView.contentHeight != contentHeight
-                    else { return }
-                    platformView.contentHeight = contentHeight
-                    platformView.invalidateIntrinsicContentSize()
-                case "renderedContentHandler":
-                    guard let renderedContentHandler = parent.renderedContentHandler,
-                          let renderedContentBase64Encoded = message.body as? String,
-                          let renderedContentBase64EncodedData: Data = .init(base64Encoded: renderedContentBase64Encoded),
-                          let renderedContent = String(data: renderedContentBase64EncodedData, encoding: .utf8)
-                    else { return }
-                    renderedContentHandler(renderedContent)
-                case "copyToPasteboard":
-                    guard let base64EncodedString = message.body as? String else { return }
-                    base64EncodedString.trimmingCharacters(in: .whitespacesAndNewlines).copyToPasteboard()
-                default:
-                    return
-                }
-            }
         }
 
         public class CustomWebView: WKWebView {
@@ -194,6 +165,12 @@ import WebKit
                 guard let markdownContentBase64Encoded = markdownContent.data(using: .utf8)?.base64EncodedString() else { return }
 
                 callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`)", in: nil, in: .page, completionHandler: nil)
+                
+                evaluateJavaScript("document.body.scrollHeight", in: nil, in: .page) { result in
+                    guard let contentHeight = try? result.get() as? Double else { return }
+                    self.contentHeight = contentHeight
+                    self.invalidateIntrinsicContentSize()
+                }
             }
 
             #if os(macOS)
@@ -228,14 +205,3 @@ import WebKit
         }
     }
 #endif
-
-extension String {
-    func copyToPasteboard() {
-        #if os(macOS)
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(self, forType: .string)
-        #else
-            UIPasteboard.general.string = self
-        #endif
-    }
-}
