@@ -260,6 +260,11 @@
     font-size: 12px;
 }
 
+:root {
+    --background-light: rgba(245, 245, 245, 0.2);
+    --background-dark: rgba(24, 24, 21, 0.2);
+}
+
 #markdown-rendered pre {
     margin-top: 0;
     margin-bottom: 0;
@@ -268,9 +273,15 @@
     word-wrap: normal;
     overflow-x: scroll;
     padding: 12px;
-    background-color: -apple-system-background;
+    background-color: var(--background-light);
     border-radius: 8px;
     border: thin solid -apple-system-separator;
+}
+
+@media (prefers-color-scheme: dark) {
+    #markdown-rendered pre {
+        background-color: var(--background-dark);
+    }
 }
 
 #markdown-rendered::before {
