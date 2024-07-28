@@ -1,3 +1,17 @@
+:root {
+    --background-light: rgba(245, 245, 245, 0.2);
+    --background-dark: rgba(24, 24, 25, 0.16);
+    --background: var(--background-light);
+    --background-code: rgba(245, 245, 245, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: var(--background-dark);
+        --background-code: rgba(24, 24, 26, 0.35);
+    }
+}
+
 #markdown-rendered {
     color: -apple-system-label;
     font-family: system-ui;
@@ -175,7 +189,7 @@
     font: 11px ui-monospace;
     line-height: 10px;
     vertical-align: middle;
-    background-color: -apple-system-background;
+    background-color: var(--background);
     border: solid thin -apple-system-separator;
     border-radius: 6px;
 }
@@ -260,11 +274,6 @@
     font-size: 12px;
 }
 
-:root {
-    --background-light: rgba(245, 245, 245, 0.2);
-    --background-dark: rgba(24, 24, 21, 0.2);
-}
-
 #markdown-rendered pre {
     margin-top: 0;
     margin-bottom: 0;
@@ -273,15 +282,9 @@
     word-wrap: normal;
     overflow-x: scroll;
     padding: 12px;
-    background-color: var(--background-light);
+    background-color: var(--background);
     border-radius: 8px;
     border: thin solid -apple-system-separator;
-}
-
-@media (prefers-color-scheme: dark) {
-    #markdown-rendered pre {
-        background-color: var(--background-dark);
-    }
 }
 
 #markdown-rendered::before {
@@ -416,7 +419,7 @@
     overflow: auto;
     border: thin solid -apple-system-separator;
     border-radius: 8px;
-    background-color: -apple-system-background;
+    background-color: var(--background);
 }
 
 #markdown-rendered td,
@@ -466,7 +469,7 @@
     margin: 0;
     font-size: 85%;
     white-space: break-spaces;
-    background-color: -apple-system-background;
+    background-color: var(--background-code);
     border-radius: 6px;
 }
 
@@ -551,54 +554,45 @@
     clip: auto;
 }
 
-/*
-#markdown-rendered pre {
-    margin-top: 0px;
-    margin-bottom: 3px;
-}
-*/
-
-/*
-button {
- background-color: -apple-system-background;
- color: -apple-system-foreground;
- padding: 0.35em 0.5em;
- text-align: center;
- font-size: 12px;
- margin: 0.25em 0.2em;
- border-radius: 0.7em;
- border: thin solid -apple-system-separator;
- margin-bottom: 1em;
- -webkit-user-select: none;
-}
-*/
-
 #markdown-rendered .code-block-wrapper {
     position: relative;
 }
 
 #markdown-rendered .copy-code-button {
+    background-color: rgba(0, 0, 0, 0);
     position: absolute;
     bottom: 10px;
     right: 10px;
     padding: 3px 5px;
-    background-color: -apple-system-background;
     color: -apple-system-foreground;
     border: none;
     cursor: pointer;
     border-radius: 5px;
     font-size: 16px;
+    transition: opacity 0.2s ease-in-out;
+    opacity: 0;
+}
+
+#markdown-rendered .code-block-wrapper:hover .copy-code-button {
+    opacity: 1;
+}
+
+#markdown-rendered .copy-code-button.copied {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 }
 
 #markdown-rendered .copy-code-button i {
     pointer-events: none; /* Prevents the icon from blocking click events */
 }
 
+#markdown-rendered>*:first-child {
+    margin-top: 0 !important;
+}
 
-
-
-
-
+#markdown-rendered>*:last-child {
+    margin-bottom: 0 !important;
+}
 
 
 
