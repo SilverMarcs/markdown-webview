@@ -3,205 +3,203 @@ import WebKit
 
 #if os(macOS)
     typealias PlatformViewRepresentable = NSViewRepresentable
-#elseif os(iOS)
+#else
     typealias PlatformViewRepresentable = UIViewRepresentable
 #endif
 
-#if !os(visionOS)
-    @available(macOS 11.0, iOS 14.0, *)
-    public struct MarkdownWebView: PlatformViewRepresentable {
-        var markdownContent: String
-        let customStylesheet: String?
-        let linkActivationHandler: ((URL) -> Void)?
-        let renderedContentHandler: ((String) -> Void)?
+@available(macOS 11.0, iOS 14.0, *)
+public struct MarkdownWebView: PlatformViewRepresentable {
+    var markdownContent: String
+    let customStylesheet: String?
+    let linkActivationHandler: ((URL) -> Void)?
+    let renderedContentHandler: ((String) -> Void)?
 
-        public init(_ markdownContent: String, customStylesheet: String? = nil) {
-            self.markdownContent = markdownContent
-            self.customStylesheet = customStylesheet
-            linkActivationHandler = nil
-            renderedContentHandler = nil
-        }
+    public init(_ markdownContent: String, customStylesheet: String? = nil) {
+        self.markdownContent = markdownContent
+        self.customStylesheet = customStylesheet
+        linkActivationHandler = nil
+        renderedContentHandler = nil
+    }
 
-        init(_ markdownContent: String, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
-            self.markdownContent = markdownContent
-            self.customStylesheet = customStylesheet
-            self.linkActivationHandler = linkActivationHandler
-            self.renderedContentHandler = renderedContentHandler
-        }
+    init(_ markdownContent: String, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
+        self.markdownContent = markdownContent
+        self.customStylesheet = customStylesheet
+        self.linkActivationHandler = linkActivationHandler
+        self.renderedContentHandler = renderedContentHandler
+    }
 
-        public func makeCoordinator() -> Coordinator { .init(parent: self) }
+    public func makeCoordinator() -> Coordinator { .init(parent: self) }
 
-        #if os(macOS)
-            public func makeNSView(context: Context) -> CustomWebView { context.coordinator.platformView }
-        #elseif os(iOS)
-            public func makeUIView(context: Context) -> CustomWebView { context.coordinator.platformView }
-        #endif
+    #if os(macOS)
+        public func makeNSView(context: Context) -> CustomWebView { context.coordinator.platformView }
+    #else
+        public func makeUIView(context: Context) -> CustomWebView { context.coordinator.platformView }
+    #endif
 
-        func updatePlatformView(_ platformView: CustomWebView, context _: Context) {
-            guard !platformView.isLoading else { return } /// This function might be called when the page is still loading, at which time `window.proxy` is not available yet.
-            platformView.updateMarkdownContent(markdownContent)
-        }
+    func updatePlatformView(_ platformView: CustomWebView, context _: Context) {
+        guard !platformView.isLoading else { return } /// This function might be called when the page is still loading, at which time `window.proxy` is not available yet.
+        platformView.updateMarkdownContent(markdownContent)
+    }
 
-        #if os(macOS)
-            public func updateNSView(_ nsView: CustomWebView, context: Context) { updatePlatformView(nsView, context: context) }
-        #elseif os(iOS)
-            public func updateUIView(_ uiView: CustomWebView, context: Context) { updatePlatformView(uiView, context: context) }
-        #endif
+    #if os(macOS)
+        public func updateNSView(_ nsView: CustomWebView, context: Context) { updatePlatformView(nsView, context: context) }
+    #else
+        public func updateUIView(_ uiView: CustomWebView, context: Context) { updatePlatformView(uiView, context: context) }
+    #endif
 
-        public func onLinkActivation(_ linkActivationHandler: @escaping (URL) -> Void) -> Self {
-            .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
-        }
+    public func onLinkActivation(_ linkActivationHandler: @escaping (URL) -> Void) -> Self {
+        .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
+    }
 
-        public func onRendered(_ renderedContentHandler: @escaping (String) -> Void) -> Self {
-            .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
-        }
+    public func onRendered(_ renderedContentHandler: @escaping (String) -> Void) -> Self {
+        .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
+    }
 
-        public class Coordinator: NSObject, WKNavigationDelegate {
-            let parent: MarkdownWebView
-            let platformView: CustomWebView
+    public class Coordinator: NSObject, WKNavigationDelegate {
+        let parent: MarkdownWebView
+        let platformView: CustomWebView
 
-            init(parent: MarkdownWebView) {
-                self.parent = parent
-                platformView = .init()
-                super.init()
+        init(parent: MarkdownWebView) {
+            self.parent = parent
+            platformView = .init()
+            super.init()
 
-                platformView.navigationDelegate = self
+            platformView.navigationDelegate = self
 
-                #if DEBUG && os(iOS)
-                    if #available(iOS 16.4, *) {
-                        self.platformView.isInspectable = true
-                    }
-                #endif
-
-                /// So that the `View` adjusts its height automatically.
-                platformView.setContentHuggingPriority(.required, for: .vertical)
-
-                /// Disables scrolling.
-                #if os(iOS)
-                    platformView.scrollView.isScrollEnabled = false
-                #endif
-
-                /// Set transparent background.
-                #if os(macOS)
-                    platformView.setValue(false, forKey: "drawsBackground")
-                /// Equavalent to `.setValue(true, forKey: "drawsTransparentBackground")` on macOS 10.12 and before, which this library doesn't target.
-                #elseif os(iOS)
-                    platformView.isOpaque = false
-                #endif
-
-                #if os(macOS)
-                    let defaultStylesheetFileName = "default-macOS"
-                #elseif os(iOS)
-                    let defaultStylesheetFileName = "default-iOS"
-                #endif
-                guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: ""),
-                      let templateString = try? String(contentsOf: templateFileURL),
-                      let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: ""),
-                      let script = try? String(contentsOf: scriptFileURL),
-                      let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: ""),
-                      let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL)
-                else {
-                    print("Failed to load resources.")
-                    return
+            #if DEBUG && !os(macOS)
+                if #available(iOS 16.4, *) {
+                    self.platformView.isInspectable = true
                 }
-                let htmlString = templateString
-                    .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
-                    .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: self.parent.customStylesheet ?? defaultStylesheet)
-                let baseURL = URL(string: "GPTalks Web Content")
-                platformView.loadHTMLString(htmlString, baseURL: baseURL)
-            }
+            #endif
 
-            /// Update the content on first finishing loading.
-            public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
-                (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent)
-            }
-
-            public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
-                if navigationAction.navigationType == .linkActivated {
-                    guard let url = navigationAction.request.url else { return .cancel }
-
-                    if let linkActivationHandler = parent.linkActivationHandler {
-                        linkActivationHandler(url)
-                    } else {
-                        #if os(macOS)
-                            NSWorkspace.shared.open(url)
-                        #elseif os(iOS)
-                            DispatchQueue.main.async {
-                                Task { await UIApplication.shared.open(url) }
-                            }
-                        #endif
-                    }
-
-                    return .cancel
-                } else {
-                    return .allow
-                }
-            }
-        }
-
-        public class CustomWebView: WKWebView {
-            var contentHeight: CGFloat = 0
-
-            override public var intrinsicContentSize: CGSize {
-                .init(width: super.intrinsicContentSize.width, height: contentHeight)
-            }
+            /// So that the `View` adjusts its height automatically.
+            platformView.setContentHuggingPriority(.required, for: .vertical)
 
             /// Disables scrolling.
-            #if os(macOS)
-                override public func scrollWheel(with event: NSEvent) {
-                    super.scrollWheel(with: event)
-                    nextResponder?.scrollWheel(with: event)
-                }
+            #if !os(macOS)
+                platformView.scrollView.isScrollEnabled = false
             #endif
 
-            /// Removes "Reload" from the context menu.
+            /// Set transparent background.
             #if os(macOS)
-                override public func willOpenMenu(_ menu: NSMenu, with _: NSEvent) {
-                    menu.items.removeAll { $0.identifier == .init("WKMenuItemIdentifierReload") }
-                }
+                platformView.setValue(false, forKey: "drawsBackground")
+            /// Equavalent to `.setValue(true, forKey: "drawsTransparentBackground")` on macOS 10.12 and before, which this library doesn't target.
+            #else
+                platformView.isOpaque = false
             #endif
 
-            func updateMarkdownContent(_ markdownContent: String) {
-                guard let markdownContentBase64Encoded = markdownContent.data(using: .utf8)?.base64EncodedString() else { return }
-
-                callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`)", in: nil, in: .page, completionHandler: nil)
-                
-                evaluateJavaScript("document.body.scrollHeight", in: nil, in: .page) { result in
-                    guard let contentHeight = try? result.get() as? Double else { return }
-                    self.contentHeight = contentHeight
-                    self.invalidateIntrinsicContentSize()
-                }
+            #if os(macOS)
+                let defaultStylesheetFileName = "default-macOS"
+            #else
+                let defaultStylesheetFileName = "default-iOS"
+            #endif
+            guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: ""),
+                  let templateString = try? String(contentsOf: templateFileURL),
+                  let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: ""),
+                  let script = try? String(contentsOf: scriptFileURL),
+                  let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: ""),
+                  let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL)
+            else {
+                print("Failed to load resources.")
+                return
             }
+            let htmlString = templateString
+                .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
+                .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: self.parent.customStylesheet ?? defaultStylesheet)
+            let baseURL = URL(string: "GPTalks Web Content")
+            platformView.loadHTMLString(htmlString, baseURL: baseURL)
+        }
 
-            #if os(macOS)
-                override public func keyDown(with event: NSEvent) {
-                    nextResponder?.keyDown(with: event)
+        /// Update the content on first finishing loading.
+        public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
+            (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent)
+        }
+
+        public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+            if navigationAction.navigationType == .linkActivated {
+                guard let url = navigationAction.request.url else { return .cancel }
+
+                if let linkActivationHandler = parent.linkActivationHandler {
+                    linkActivationHandler(url)
+                } else {
+                    #if os(macOS)
+                        NSWorkspace.shared.open(url)
+                    #else
+                        DispatchQueue.main.async {
+                            Task { await UIApplication.shared.open(url) }
+                        }
+                    #endif
                 }
 
-                override public func keyUp(with event: NSEvent) {
-                    nextResponder?.keyUp(with: event)
-                }
-
-                override public func flagsChanged(with event: NSEvent) {
-                    nextResponder?.flagsChanged(with: event)
-                }
-
-            #elseif os(iOS)
-                override public func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-                    super.pressesBegan(presses, with: event)
-                    next?.pressesBegan(presses, with: event)
-                }
-
-                override public func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-                    super.pressesEnded(presses, with: event)
-                    next?.pressesEnded(presses, with: event)
-                }
-
-                override public func pressesChanged(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-                    super.pressesChanged(presses, with: event)
-                    next?.pressesChanged(presses, with: event)
-                }
-            #endif
+                return .cancel
+            } else {
+                return .allow
+            }
         }
     }
-#endif
+
+    public class CustomWebView: WKWebView {
+        var contentHeight: CGFloat = 0
+
+        override public var intrinsicContentSize: CGSize {
+            .init(width: super.intrinsicContentSize.width, height: contentHeight)
+        }
+
+        /// Disables scrolling.
+        #if os(macOS)
+            override public func scrollWheel(with event: NSEvent) {
+                super.scrollWheel(with: event)
+                nextResponder?.scrollWheel(with: event)
+            }
+        #endif
+
+        /// Removes "Reload" from the context menu.
+        #if os(macOS)
+            override public func willOpenMenu(_ menu: NSMenu, with _: NSEvent) {
+                menu.items.removeAll { $0.identifier == .init("WKMenuItemIdentifierReload") }
+            }
+        #endif
+
+        func updateMarkdownContent(_ markdownContent: String) {
+            guard let markdownContentBase64Encoded = markdownContent.data(using: .utf8)?.base64EncodedString() else { return }
+
+            callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`)", in: nil, in: .page, completionHandler: nil)
+            
+            evaluateJavaScript("document.body.scrollHeight", in: nil, in: .page) { result in
+                guard let contentHeight = try? result.get() as? Double else { return }
+                self.contentHeight = contentHeight
+                self.invalidateIntrinsicContentSize()
+            }
+        }
+
+        #if os(macOS)
+            override public func keyDown(with event: NSEvent) {
+                nextResponder?.keyDown(with: event)
+            }
+
+            override public func keyUp(with event: NSEvent) {
+                nextResponder?.keyUp(with: event)
+            }
+
+            override public func flagsChanged(with event: NSEvent) {
+                nextResponder?.flagsChanged(with: event)
+            }
+
+        #else
+            override public func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+                super.pressesBegan(presses, with: event)
+                next?.pressesBegan(presses, with: event)
+            }
+
+            override public func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+                super.pressesEnded(presses, with: event)
+                next?.pressesEnded(presses, with: event)
+            }
+
+            override public func pressesChanged(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+                super.pressesChanged(presses, with: event)
+                next?.pressesChanged(presses, with: event)
+            }
+        #endif
+    }
+}
