@@ -13,19 +13,26 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     let customStylesheet: String?
     let linkActivationHandler: ((URL) -> Void)?
     let renderedContentHandler: ((String) -> Void)?
+    let highlightString: String? // New property for the highlight string
+    // Shows up on activity monitor
+    let baseURL: String
 
-    public init(_ markdownContent: String, customStylesheet: String? = nil) {
+    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: String? = nil) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
+        self.highlightString = highlightString
+        self.baseURL = baseURL
         linkActivationHandler = nil
         renderedContentHandler = nil
     }
 
-    init(_ markdownContent: String, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
+    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.linkActivationHandler = linkActivationHandler
         self.renderedContentHandler = renderedContentHandler
+        self.highlightString = highlightString
+        self.baseURL = baseURL
     }
 
     public func makeCoordinator() -> Coordinator { .init(parent: self) }
@@ -37,8 +44,8 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     #endif
 
     func updatePlatformView(_ platformView: CustomWebView, context _: Context) {
-        guard !platformView.isLoading else { return } /// This function might be called when the page is still loading, at which time `window.proxy` is not available yet.
-        platformView.updateMarkdownContent(markdownContent)
+        guard !platformView.isLoading else { return }
+        platformView.updateMarkdownContent(markdownContent, highlightString: highlightString)
     }
 
     #if os(macOS)
@@ -48,11 +55,11 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     #endif
 
     public func onLinkActivation(_ linkActivationHandler: @escaping (URL) -> Void) -> Self {
-        .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
+        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
     }
 
     public func onRendered(_ renderedContentHandler: @escaping (String) -> Void) -> Self {
-        .init(markdownContent, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
+        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
     }
 
     public class Coordinator: NSObject, WKNavigationDelegate {
@@ -106,13 +113,13 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             let htmlString = templateString
                 .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
                 .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: self.parent.customStylesheet ?? defaultStylesheet)
-            let baseURL = URL(string: "GPTalks Web Content")
+            let baseURL = URL(string: parent.baseURL)
             platformView.loadHTMLString(htmlString, baseURL: baseURL)
         }
 
         /// Update the content on first finishing loading.
         public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
-            (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent)
+            (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString)
         }
 
         public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
@@ -160,10 +167,12 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             }
         #endif
 
-        func updateMarkdownContent(_ markdownContent: String) {
+        func updateMarkdownContent(_ markdownContent: String, highlightString: String?) {
             guard let markdownContentBase64Encoded = markdownContent.data(using: .utf8)?.base64EncodedString() else { return }
+            
+            let highlightStringBase64Encoded = highlightString?.data(using: .utf8)?.base64EncodedString() ?? ""
 
-            callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`)", in: nil, in: .page, completionHandler: nil)
+            callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`, `\(highlightStringBase64Encoded)`)", in: nil, in: .page, completionHandler: nil)
             
             evaluateJavaScript("document.body.scrollHeight", in: nil, in: .page) { result in
                 guard let contentHeight = try? result.get() as? Double else { return }

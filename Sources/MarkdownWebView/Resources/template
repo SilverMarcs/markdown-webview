@@ -22,6 +22,14 @@
         body::-webkit-scrollbar {
             display: none !important;
         }
+        
+        .highlight {
+            padding: 0.1em 0;
+            margin: 0;
+            white-space: break-spaces;
+            background-color: #857524;
+            border-radius: 3px;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
@@ -126,9 +134,19 @@
 
         const markdownRenderedElement = document.getElementById(`markdown-rendered`);
 
-        window.updateWithMarkdownContentBase64Encoded = (markdownContentBase64Encoded) => {
+        window.updateWithMarkdownContentBase64Encoded = (markdownContentBase64Encoded, highlightStringBase64Encoded) => {
             const markdownContent = decodeURIComponent(atob(markdownContentBase64Encoded).split('').map(function (c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''));
-            const renderedContent = markdownIt.render(markdownContent);
+            let renderedContent = markdownIt.render(markdownContent);
+
+            // Highlight the text if a highlight string is provided
+            if (highlightStringBase64Encoded) {
+                const highlightString = decodeURIComponent(atob(highlightStringBase64Encoded).split('').map(function (c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''));
+                if (highlightString.trim() !== '') {
+                    const escapedHighlightString = highlightString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapedHighlightString, 'gi');
+                    renderedContent = renderedContent.replace(regex, match => `<span class="highlight">${match}</span>`);
+                }
+            }
 
             // Create a temporary element to hold the new rendered content
             const tempElement = document.createElement('div');
@@ -157,17 +175,11 @@
                     return true;
                 }
             });
-
-            // // send the html contnent via POST to https://webhook.site/9251dc8e-fc67-4e37-8a72-50129affd04e for debug
-            // fetch('https://webhook.site/9251dc8e-fc67-4e37-8a72-50129affd04e', {
-            //     method: 'POST',
-            //     body: markdownRenderedElement.innerHTML
-            // });
             
             window.webkit.messageHandlers.renderedContentHandler.postMessage(markdownContentBase64Encoded);
         }
 
-                    const resizeObserver = new ResizeObserver((entries) => { window.webkit.messageHandlers.sizeChangeHandler.postMessage(entries[0].borderBoxSize[0].blockSize) });
+        const resizeObserver = new ResizeObserver((entries) => { window.webkit.messageHandlers.sizeChangeHandler.postMessage(entries[0].borderBoxSize[0].blockSize) });
         resizeObserver.observe(markdownRenderedElement);
     </script>
 </body>
