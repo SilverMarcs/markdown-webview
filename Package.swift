@@ -17,10 +17,9 @@ let package = Package(
     targets: [
         .target(
             name: "MarkdownWebView",
-            resources: [.copy("Resources/template"),
-                        .copy("Resources/script"),
-                        .copy("Resources/stylesheets/default-macOS"),
-                        .copy("Resources/stylesheets/default-iOS")]
+            resources: [
+              .process("Resources")
+            ]
         ),
     ]
 )

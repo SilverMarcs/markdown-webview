@@ -10,14 +10,14 @@ import WebKit
 @available(macOS 11.0, iOS 14.0, *)
 public struct MarkdownWebView: PlatformViewRepresentable {
     var markdownContent: String
-    let customStylesheet: String?
+    let customStylesheet: MarkdownTheme // New property for the custom stylesheet
     let linkActivationHandler: ((URL) -> Void)?
     let renderedContentHandler: ((String) -> Void)?
     let highlightString: String? // New property for the highlight string
     let baseURL: String // Shows up on activity monitor
     let fontSize: CGFloat
 
-    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: String? = nil, fontSize: CGFloat = 13) {
+    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: MarkdownTheme = .github, fontSize: CGFloat = 13) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.highlightString = highlightString
@@ -27,7 +27,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         renderedContentHandler = nil
     }
 
-    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?, fontSize: CGFloat) {
+    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: MarkdownTheme = .github, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?, fontSize: CGFloat) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.linkActivationHandler = linkActivationHandler
@@ -107,14 +107,19 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                   let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: ""),
                   let script = try? String(contentsOf: scriptFileURL),
                   let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: ""),
-                  let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL)
+                  let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL),
+                  let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: ""),
+                  let customStylesheet = try? String(contentsOf: customStylesheetFileURL)
             else {
                 print("Failed to load resources.")
                 return
             }
+
+            let combinedStylesheet = defaultStylesheet + "\n" + customStylesheet
+
             let htmlString = templateString
                 .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
-                .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: self.parent.customStylesheet ?? defaultStylesheet)
+                .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
             let baseURL = URL(string: parent.baseURL)
             platformView.loadHTMLString(htmlString, baseURL: baseURL)
         }
@@ -212,5 +217,53 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                 next?.pressesChanged(presses, with: event)
             }
         #endif
+    }
+}
+
+public enum MarkdownTheme: String, Codable, CaseIterable {
+    case github
+    case atom
+    case a11y
+    case panda
+    case paraiso
+    case stackoverflow
+    case tokyo
+    
+    var fileName: String {
+        switch self {
+        case .github:
+            return "github"
+        case .atom:
+            return "atom"
+        case .a11y:
+            return "a11y"
+        case .panda:
+            return "panda"
+        case .paraiso:
+            return "paraiso"
+        case .stackoverflow:
+            return "stackoverflow"
+        case .tokyo:
+            return "tokyo"
+        }
+    }
+    
+    public var name: String {
+        switch self {
+        case .github:
+            return "GitHub"
+        case .atom:
+            return "Atom One"
+        case .a11y:
+            return "A11Y"
+        case .panda:
+            return "Panda"
+        case .paraiso:
+            return "Paraiso"
+        case .stackoverflow:
+            return "StackOverflow"
+        case .tokyo:
+            return "Tokyo"
+        }
     }
 }
