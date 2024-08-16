@@ -150,6 +150,11 @@
 
             // Update the base font size
             document.documentElement.style.setProperty('--base-font-size', `${fontSize}px`);
+            
+            window.updateStylesheet = (newStylesheet) => {
+                const styleElement = document.getElementById('custom-stylesheet');
+                styleElement.textContent = newStylesheet;
+            };
 
             // Create a temporary element to hold the new rendered content
             const tempElement = document.createElement('div');

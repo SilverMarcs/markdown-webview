@@ -565,12 +565,12 @@
     position: absolute;
     bottom: 0.625rem;
     right: 0.625rem;
-    padding: 0.1875rem 0.3125rem;
+    padding: 0.3125rem 0.3125rem;
     color: -apple-system-foreground;
     border: none;
     cursor: pointer;
     border-radius: 0.3125rem;
-    font-size: 1rem;
+    font-size: 1.3rem;
     transition: opacity 0.2s ease-in-out;
     opacity: 0;
 }

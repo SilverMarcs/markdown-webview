@@ -45,8 +45,15 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         public func makeUIView(context: Context) -> CustomWebView { context.coordinator.platformView }
     #endif
 
-    func updatePlatformView(_ platformView: CustomWebView, context _: Context) {
+    public func updatePlatformView(_ platformView: CustomWebView, context _: Context) {
         guard !platformView.isLoading else { return }
+        
+        // Load the new stylesheet
+        if let customStylesheetFileURL = Bundle.module.url(forResource: self.customStylesheet.fileName, withExtension: ""),
+           let customStylesheet = try? String(contentsOf: customStylesheetFileURL) {
+            platformView.updateStylesheet(customStylesheet)
+        }
+        
         platformView.updateMarkdownContent(markdownContent, highlightString: highlightString, fontSize: fontSize)
     }
 
@@ -186,6 +193,17 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                 self.contentHeight = contentHeight
                 self.invalidateIntrinsicContentSize()
             }
+        }
+        
+        func updateStylesheet(_ stylesheet: String) {
+            let script = """
+            (function() {
+                var style = document.createElement('style');
+                style.textContent = `\(stylesheet)`;
+                document.head.appendChild(style);
+            })();
+            """
+            evaluateJavaScript(script, completionHandler: nil)
         }
 
         #if os(macOS)
