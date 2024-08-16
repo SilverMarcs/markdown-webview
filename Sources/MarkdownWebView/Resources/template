@@ -134,7 +134,7 @@
 
         const markdownRenderedElement = document.getElementById(`markdown-rendered`);
 
-        window.updateWithMarkdownContentBase64Encoded = (markdownContentBase64Encoded, highlightStringBase64Encoded) => {
+        window.updateWithMarkdownContentBase64Encoded = (markdownContentBase64Encoded, highlightStringBase64Encoded, fontSize) => {
             const markdownContent = decodeURIComponent(atob(markdownContentBase64Encoded).split('').map(function (c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''));
             let renderedContent = markdownIt.render(markdownContent);
 
@@ -147,6 +147,9 @@
                     renderedContent = renderedContent.replace(regex, match => `<span class="highlight">${match}</span>`);
                 }
             }
+
+            // Update the base font size
+            document.documentElement.style.setProperty('--base-font-size', `${fontSize}px`);
 
             // Create a temporary element to hold the new rendered content
             const tempElement = document.createElement('div');

@@ -14,25 +14,27 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     let linkActivationHandler: ((URL) -> Void)?
     let renderedContentHandler: ((String) -> Void)?
     let highlightString: String? // New property for the highlight string
-    // Shows up on activity monitor
-    let baseURL: String
+    let baseURL: String // Shows up on activity monitor
+    let fontSize: CGFloat
 
-    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: String? = nil) {
+    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: String? = nil, fontSize: CGFloat = 13) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.highlightString = highlightString
         self.baseURL = baseURL
+        self.fontSize = fontSize
         linkActivationHandler = nil
         renderedContentHandler = nil
     }
 
-    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
+    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: String?, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?, fontSize: CGFloat) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.linkActivationHandler = linkActivationHandler
         self.renderedContentHandler = renderedContentHandler
         self.highlightString = highlightString
         self.baseURL = baseURL
+        self.fontSize = fontSize
     }
 
     public func makeCoordinator() -> Coordinator { .init(parent: self) }
@@ -45,7 +47,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
 
     func updatePlatformView(_ platformView: CustomWebView, context _: Context) {
         guard !platformView.isLoading else { return }
-        platformView.updateMarkdownContent(markdownContent, highlightString: highlightString)
+        platformView.updateMarkdownContent(markdownContent, highlightString: highlightString, fontSize: fontSize)
     }
 
     #if os(macOS)
@@ -55,11 +57,11 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     #endif
 
     public func onLinkActivation(_ linkActivationHandler: @escaping (URL) -> Void) -> Self {
-        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
+        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler, fontSize: fontSize)
     }
 
     public func onRendered(_ renderedContentHandler: @escaping (String) -> Void) -> Self {
-        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
+        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler, fontSize: fontSize)
     }
 
     public class Coordinator: NSObject, WKNavigationDelegate {
@@ -119,7 +121,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
 
         /// Update the content on first finishing loading.
         public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
-            (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString)
+            (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString, fontSize: parent.fontSize)
         }
 
         public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
@@ -167,12 +169,12 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             }
         #endif
 
-        func updateMarkdownContent(_ markdownContent: String, highlightString: String?) {
+        func updateMarkdownContent(_ markdownContent: String, highlightString: String?, fontSize: CGFloat) {
             guard let markdownContentBase64Encoded = markdownContent.data(using: .utf8)?.base64EncodedString() else { return }
             
             let highlightStringBase64Encoded = highlightString?.data(using: .utf8)?.base64EncodedString() ?? ""
 
-            callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`, `\(highlightStringBase64Encoded)`)", in: nil, in: .page, completionHandler: nil)
+            callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`, `\(highlightStringBase64Encoded)`, \(fontSize))", in: nil, in: .page, completionHandler: nil)
             
             evaluateJavaScript("document.body.scrollHeight", in: nil, in: .page) { result in
                 guard let contentHeight = try? result.get() as? Double else { return }

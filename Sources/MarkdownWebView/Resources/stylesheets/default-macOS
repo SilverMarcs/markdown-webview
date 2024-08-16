@@ -1,4 +1,6 @@
 :root {
+    --base-font-size: 13px;
+    font-size: var(--base-font-size);
     --background-light: rgba(245, 245, 245, 0.2);
     --background-dark: rgba(24, 24, 25, 0.16);
     --background: var(--background-light);
@@ -15,7 +17,7 @@
 #markdown-rendered {
     color: -apple-system-label;
     font-family: system-ui;
-    font-size: 10pt;
+    font-size: 1.03rem;
     line-height: 1.5;
     word-wrap: break-word;
 }
@@ -57,7 +59,7 @@
 #markdown-rendered h1 {
     margin: .67em 0;
     font-weight: 600;
-    font-size: 2em;
+    font-size: 2rem;
 }
 
 #markdown-rendered mark {
@@ -65,12 +67,12 @@
 }
 
 #markdown-rendered small {
-    font-size: 90%;
+    font-size: 0.9rem;
 }
 
 #markdown-rendered sub,
 #markdown-rendered sup {
-    font-size: 75%;
+    font-size: 0.75rem;
     line-height: 0;
     position: relative;
     vertical-align: baseline;
@@ -99,14 +101,14 @@
 }
 
 #markdown-rendered figure {
-    margin: 1em 40px;
+    margin: 1em 2.5rem;
 }
 
 #markdown-rendered hr {
     box-sizing: content-box;
     overflow: hidden;
     padding: 0;
-    margin: 24px 0;
+    margin: 1.5rem 0;
     border: 0;
     border-bottom: thin solid -apple-system-separator;
 }
@@ -185,13 +187,13 @@
 
 #markdown-rendered kbd {
     display: inline-block;
-    padding: 3px 5px;
-    font: 11px ui-monospace;
-    line-height: 10px;
+    padding: 0.1875rem 0.3125rem;
+    font: 0.6875rem ui-monospace;
+    line-height: 0.625rem;
     vertical-align: middle;
     background-color: var(--background);
     border: solid thin -apple-system-separator;
-    border-radius: 6px;
+    border-radius: 0.375rem;
 }
 
 #markdown-rendered h1,
@@ -200,41 +202,41 @@
 #markdown-rendered h4,
 #markdown-rendered h5,
 #markdown-rendered h6 {
-    margin-top: 24px;
-    margin-bottom: 16px;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
     font-weight: 600;
     line-height: 1.25;
 }
 
 #markdown-rendered h2 {
     font-weight: 600;
-    font-size: 1.5em;
+    font-size: 1.5rem;
 }
 
 #markdown-rendered h3 {
     font-weight: 600;
-    font-size: 1.25em;
+    font-size: 1.25rem;
 }
 
 #markdown-rendered h4 {
     font-weight: 600;
-    font-size: 1em;
+    font-size: 1rem;
 }
 
 #markdown-rendered h5 {
     font-weight: 600;
-    font-size: .875em;
+    font-size: 0.875rem;
 }
 
 #markdown-rendered h6 {
     font-weight: 600;
-    font-size: .85em;
+    font-size: 0.85rem;
     color: -apple-system-secondary-label;
 }
 
 #markdown-rendered p {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 0.625rem;
 }
 
 #markdown-rendered blockquote {
@@ -271,19 +273,19 @@
 #markdown-rendered code,
 #markdown-rendered samp {
     font-family: ui-monospace;
-    font-size: 12px;
+    font-size: 0.95rem;
 }
 
 #markdown-rendered pre {
     margin-top: 0;
     margin-bottom: 0;
     font-family: ui-monospace;
-    font-size: 12px;
+    font-size: 0.95rem;
     word-wrap: normal;
     overflow-x: scroll;
-    padding: 12px;
+    padding: 0.95rem;
     background-color: var(--background);
-    border-radius: 8px;
+    border-radius: 0.5rem;
     border: thin solid -apple-system-separator;
 }
 
@@ -312,7 +314,7 @@
 #markdown-rendered pre,
 #markdown-rendered details {
     margin-top: 0;
-    margin-bottom: 14px;
+    margin-bottom: 0.875rem;
 }
 
 #markdown-rendered blockquote>:first-child {
@@ -387,11 +389,11 @@
 }
 
 #markdown-rendered li>p {
-    margin-top: 16px;
+    margin-top: 1rem;
 }
 
 #markdown-rendered li+li {
-    margin-top: .25em;
+    margin-top: 0.25em;
 }
 
 #markdown-rendered dl {
@@ -400,15 +402,15 @@
 
 #markdown-rendered dl dt {
     padding: 0;
-    margin-top: 16px;
+    margin-top: 1rem;
     font-size: 1em;
     font-style: italic;
     font-weight: 600;
 }
 
 #markdown-rendered dl dd {
-    padding: 0 16px;
-    margin-bottom: 16px;
+    padding: 0 1rem;
+    margin-bottom: 1rem;
 }
 
 #markdown-rendered table {
@@ -418,7 +420,7 @@
     max-width: 100%;
     overflow: auto;
     border: thin solid -apple-system-separator;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     background-color: var(--background);
 }
 
@@ -434,17 +436,17 @@
 
 #markdown-rendered table th,
 #markdown-rendered table td {
-    padding: 4px 0 4px 16px;
+    padding: 0.25rem 0 0.25rem 1rem;
 }
 
 #markdown-rendered table th:first-child,
 #markdown-rendered table td:first-child {
-    padding-left: 12px;
+    padding-left: 0.75rem;
 }
 
 #markdown-rendered table th:last-child,
 #markdown-rendered table td:last-child {
-    padding-right: 12px;
+    padding-right: 0.75rem;
 }
 
 #markdown-rendered table > tbody > tr:nth-child(odd) > td {
@@ -456,21 +458,21 @@
 }
 
 #markdown-rendered img[align=right] {
-    padding-left: 20px;
+    padding-left: 1.25rem;
 }
 
 #markdown-rendered img[align=left] {
-    padding-right: 20px;
+    padding-right: 1.25rem;
 }
 
 #markdown-rendered code,
 #markdown-rendered tt {
-    padding: .2em .4em;
+    padding: 0.2em 0.4em;
     margin: 0;
     font-size: 85%;
     white-space: break-spaces;
     background-color: var(--background-code);
-    border-radius: 6px;
+    border-radius: 0.375rem;
 }
 
 #markdown-rendered code br,
@@ -525,7 +527,7 @@
 }
 
 #markdown-rendered .task-list-item+.task-list-item {
-    margin-top: 4px;
+    margin-top: 0.25rem;
 }
 
 #markdown-rendered .task-list-item .handle {
@@ -533,12 +535,12 @@
 }
 
 #markdown-rendered .task-list-item-checkbox {
-    margin: 0 .2em .25em -1.4em;
+    margin: 0 0.2em 0.25em -1.4em;
     vertical-align: middle;
 }
 
 #markdown-rendered .contains-task-list:dir(rtl) .task-list-item-checkbox {
-    margin: 0 -1.6em .25em .2em;
+    margin: 0 -1.6em 0.25em 0.2em;
 }
 
 #markdown-rendered .contains-task-list {
@@ -549,7 +551,7 @@
 #markdown-rendered .contains-task-list:focus-within .task-list-item-convert-container {
     display: block;
     width: auto;
-    height: 24px;
+    height: 1.5rem;
     overflow: visible;
     clip: auto;
 }
@@ -561,14 +563,14 @@
 #markdown-rendered .copy-code-button {
     background-color: rgba(0, 0, 0, 0);
     position: absolute;
-    bottom: 10px;
-    right: 10px;
-    padding: 3px 5px;
+    bottom: 0.625rem;
+    right: 0.625rem;
+    padding: 0.1875rem 0.3125rem;
     color: -apple-system-foreground;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 0.3125rem;
+    font-size: 1rem;
     transition: opacity 0.2s ease-in-out;
     opacity: 0;
 }
