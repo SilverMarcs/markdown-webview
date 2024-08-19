@@ -27,7 +27,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         renderedContentHandler = nil
     }
 
-    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: MarkdownTheme = .github, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?, fontSize: CGFloat) {
+    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: MarkdownTheme = .github, fontSize: CGFloat, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.linkActivationHandler = linkActivationHandler
@@ -64,11 +64,11 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     #endif
 
     public func onLinkActivation(_ linkActivationHandler: @escaping (URL) -> Void) -> Self {
-        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler, fontSize: fontSize)
+        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, fontSize: fontSize, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
     }
 
     public func onRendered(_ renderedContentHandler: @escaping (String) -> Void) -> Self {
-        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler, fontSize: fontSize)
+        .init(markdownContent, baseURL: baseURL, highlightString: highlightString, customStylesheet: customStylesheet, fontSize: fontSize, linkActivationHandler: linkActivationHandler, renderedContentHandler: renderedContentHandler)
     }
 
     public class Coordinator: NSObject, WKNavigationDelegate {
@@ -134,6 +134,8 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         /// Update the content on first finishing loading.
         public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
             (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString, fontSize: parent.fontSize)
+            
+            self.parent.renderedContentHandler?("rendered")
         }
 
         public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
