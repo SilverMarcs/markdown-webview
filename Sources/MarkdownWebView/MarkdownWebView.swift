@@ -104,7 +104,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                 platformView.isOpaque = false
             #endif
 
-            #if os(macOS)
+            #if os(macOS) || targetEnvironment(macCatalyst)
                 let defaultStylesheetFileName = "default-macOS"
             #else
                 let defaultStylesheetFileName = "default-iOS"
