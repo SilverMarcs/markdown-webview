@@ -109,6 +109,8 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             #else
                 let defaultStylesheetFileName = "default-iOS"
             #endif
+
+            // Load the HTML template and resources
             guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: ""),
                   let templateString = try? String(contentsOf: templateFileURL),
                   let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: ""),
@@ -116,17 +118,23 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                   let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: ""),
                   let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL),
                   let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: ""),
-                  let customStylesheet = try? String(contentsOf: customStylesheetFileURL)
+                  let customStylesheet = try? String(contentsOf: customStylesheetFileURL),
+                  let styleFileURL = Bundle.module.url(forResource: "style", withExtension: ""),
+                  let style = try? String(contentsOf: styleFileURL)
             else {
                 print("Failed to load resources.")
                 return
             }
 
-            let combinedStylesheet = defaultStylesheet + "\n" + customStylesheet
+            // Combine the default stylesheet with the custom style file
+            let combinedStylesheet = defaultStylesheet + "\n" + customStylesheet + "\n" + style
 
+            // Replace placeholders in the template
             let htmlString = templateString
                 .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
                 .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
+
+            // Load the HTML string into the web view
             let baseURL = URL(string: parent.baseURL)
             platformView.loadHTMLString(htmlString, baseURL: baseURL)
         }
