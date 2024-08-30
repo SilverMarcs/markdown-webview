@@ -38,13 +38,15 @@
     <script>
             // This script is injected into the web view to enable code blocks
             (function (window) {
-                const defaultOptions = {
-                    buttonClass: 'copy-code-button',
-                    wrapperClass: 'code-block-wrapper',
-                    copyIcon: '<i class="fa-regular fa-clone"></i>',
-                    copiedIcon: '<i class="fa-solid fa-check"></i>',
-                    copiedDelay: 2000
-                };
+            const defaultOptions = {
+                buttonClass: 'copy-code-button',
+                wrapperClass: 'code-block-wrapper',
+                copyIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="8" y="8" width="12" height="12" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="4" width="12" height="12" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round" style="fill: none; stroke-opacity: 0.5;"/></svg>',
+                copiedIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>',
+                copiedDelay: 2000
+            };
+
+
 
                 function renderCode(origRule, options) {
                     options = Object.assign({}, defaultOptions, options);
