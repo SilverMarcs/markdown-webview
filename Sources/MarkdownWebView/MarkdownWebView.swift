@@ -111,15 +111,15 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             #endif
 
             // Load the HTML template and resources
-            guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: ""),
+            guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: "html"),
                   let templateString = try? String(contentsOf: templateFileURL),
-                  let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: ""),
+                  let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: "js"),
                   let script = try? String(contentsOf: scriptFileURL),
-                  let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: ""),
+                  let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: "css"),
                   let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL),
-                  let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: ""),
+                  let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: "css"),
                   let customStylesheet = try? String(contentsOf: customStylesheetFileURL),
-                  let styleFileURL = Bundle.module.url(forResource: "style", withExtension: ""),
+                  let styleFileURL = Bundle.module.url(forResource: "style", withExtension: "css"),
                   let style = try? String(contentsOf: styleFileURL)
             else {
                 print("Failed to load resources.")
