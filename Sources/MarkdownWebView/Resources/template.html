@@ -78,6 +78,17 @@
   <body>
     <div id="markdown-rendered"></div>
     <script>
+      // Optimized Base64 decoding function
+      function decodeBase64(base64String) {
+        const binaryString = atob(base64String);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return new TextDecoder().decode(bytes);
+      }
+
       const markdownIt = window
         .markdownit({
           highlight: function (str, lang) {
@@ -107,43 +118,29 @@
         })
         .use(window.markdownitCodeCopy);
 
-      const markdownRenderedElement =
-        document.getElementById(`markdown-rendered`);
+      const markdownRenderedElement = document.getElementById(`markdown-rendered`);
 
       window.updateWithMarkdownContentBase64Encoded = (
         markdownContentBase64Encoded,
         highlightStringBase64Encoded,
         fontSize,
       ) => {
-        const markdownContent = decodeURIComponent(
-          atob(markdownContentBase64Encoded)
-            .split("")
-            .map(function (c) {
-              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-            })
-            .join(""),
-        );
+        // Decode the Base64-encoded markdown content
+        const markdownContent = decodeBase64(markdownContentBase64Encoded);
         let renderedContent = markdownIt.render(markdownContent);
 
         // Highlight the text if a highlight string is provided
         if (highlightStringBase64Encoded) {
-          const highlightString = decodeURIComponent(
-            atob(highlightStringBase64Encoded)
-              .split("")
-              .map(function (c) {
-                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-              })
-              .join(""),
-          );
+          const highlightString = decodeBase64(highlightStringBase64Encoded);
           if (highlightString.trim() !== "") {
             const escapedHighlightString = highlightString.replace(
               /[.*+?^${}()|[\]\\]/g,
-              "\\$&",
+              "\\$&"
             );
             const regex = new RegExp(escapedHighlightString, "gi");
             renderedContent = renderedContent.replace(
               regex,
-              (match) => `<span class="highlight">${match}</span>`,
+              (match) => `<span class="highlight">${match}</span>`
             );
           }
         }
@@ -154,16 +151,16 @@
           `${fontSize}px`,
         );
 
-        window.updateStylesheet = (newStylesheet) => {
-          const styleElement = document.getElementById("custom-stylesheet");
-          styleElement.textContent = newStylesheet;
-        };
+<!--        window.updateStylesheet = (newStylesheet) => {-->
+<!--          const styleElement = document.getElementById("custom-stylesheet");-->
+<!--          styleElement.textContent = newStylesheet;-->
+<!--        };-->
 
         // Create a temporary element to hold the new rendered content
         const tempElement = document.createElement("div");
         tempElement.innerHTML = renderedContent;
 
-        // Clean up the temporary DOM to remove unwanted <p> tags inside <li> elements. This is what causes the numbered list line break issue.
+        // Clean up the temporary DOM to remove unwanted <p> tags inside <li> elements
         tempElement.querySelectorAll("li > p").forEach((pTag) => {
           const li = pTag.parentNode;
           while (pTag.firstChild) {
@@ -175,7 +172,8 @@
         // Use morphdom to update the content without losing the text selection
         morphdom(markdownRenderedElement, tempElement, {
           onBeforeElUpdated: function (fromEl, toEl) {
-            // spec - https://dom.spec.whatwg.org/#concept-node-equals
+              // spec - https://dom.spec.whatwg.org/#concept-node-equals
+            // Prevent updating if nodes are equal
             if (fromEl.isEqualNode(toEl)) {
               return false;
             }
@@ -187,17 +185,18 @@
           },
         });
 
+        // Notify the webkit handler that content has been rendered
         window.webkit.messageHandlers.renderedContentHandler.postMessage(
           markdownContentBase64Encoded,
         );
       };
 
-      const resizeObserver = new ResizeObserver((entries) => {
-        window.webkit.messageHandlers.sizeChangeHandler.postMessage(
-          entries[0].borderBoxSize[0].blockSize,
-        );
-      });
-      resizeObserver.observe(markdownRenderedElement);
+<!--      const resizeObserver = new ResizeObserver((entries) => {-->
+<!--        window.webkit.messageHandlers.sizeChangeHandler.postMessage(-->
+<!--          entries[0].borderBoxSize[0].blockSize,-->
+<!--        );-->
+<!--      });-->
+<!--      resizeObserver.observe(markdownRenderedElement);-->
     </script>
   </body>
 </html>
