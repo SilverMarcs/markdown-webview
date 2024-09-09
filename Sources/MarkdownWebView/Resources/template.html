@@ -6,35 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <script>
-      PLACEHOLDER_SCRIPT;
-    </script>
-    <style>
-      PLACEHOLDER_STYLESHEET
-    </style>
-    <style>
-      :root {
-        color-scheme: light dark !important;
-      }
-
-      html,
-      body {
-        overscroll-behavior: none !important;
-        margin: 0 !important;
-      }
-
-      body::-webkit-scrollbar {
-        display: none !important;
-      }
-
-      .highlight {
-        padding: 0.1em 0;
-        margin: 0;
-        white-space: break-spaces;
-        background-color: #857524;
-        border-radius: 3px;
-      }
-    </style>
+    <script>PLACEHOLDER_SCRIPT;</script>
+    <script>KATEX_SCRIP;T</script>
+    <script>TEXMATH_SCRIPT;</script>
+    <style>PLACEHOLDER_STYLESHEET</style>
     <script>
       // This script is injected into the web view to enable code blocks
       (function (window) {
@@ -122,6 +97,15 @@
         /* .use(window.markdownitSub) */
         /*  .use(window.markdownitSup) */
         /* .use(window.markdownitFootnote) */
+        .use(window.texmath, {
+          engine: window.katex,
+          delimiters: ['dollars', 'brackets', 'doxygen', 'gitlab', 'julia', 'kramdown', 'beg_end'],
+          katexOptions: {
+            throwOnError: false,
+            errorColor: '#cc0000',
+          },
+          breaks: false,
+        })
         .use(window.markdownitCodeCopy);
 
       const markdownRenderedElement =

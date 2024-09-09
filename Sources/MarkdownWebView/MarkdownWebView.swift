@@ -115,11 +115,15 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                   let templateString = try? String(contentsOf: templateFileURL),
                   let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: "js"),
                   let script = try? String(contentsOf: scriptFileURL),
+                  let katexScriptFileURL = Bundle.module.url(forResource: "katex", withExtension: "js"),
+                  let katexScript = try? String(contentsOf: katexScriptFileURL),
+                  let texmathScriptFileURL = Bundle.module.url(forResource: "texmath", withExtension: "js"),
+                  let texmathScript = try? String(contentsOf: texmathScriptFileURL),
                   let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: "css"),
                   let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL),
                   let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: "css"),
                   let customStylesheet = try? String(contentsOf: customStylesheetFileURL),
-                  let styleFileURL = Bundle.module.url(forResource: "style", withExtension: "css"),
+                  let styleFileURL = Bundle.module.url(forResource: "commonStyle", withExtension: "css"),
                   let style = try? String(contentsOf: styleFileURL)
             else {
                 print("Failed to load resources.")
@@ -132,6 +136,8 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             // Replace placeholders in the template
             let htmlString = templateString
                 .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
+                .replacingOccurrences(of: "KATEX_SCRIPT", with: katexScript)
+                .replacingOccurrences(of: "TEXMATH_SCRIPT", with: texmathScript)
                 .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
 
             // Load the HTML string into the web view
