@@ -6,9 +6,13 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <script>PLACEHOLDER_SCRIPT;</script>
-    <script>KATEX_SCRIP;T</script>
+    <script>KATEX_SCRIPT;</script>
     <script>TEXMATH_SCRIPT;</script>
+    <script>CLIPBOARD_SCRIPT;</script>
+    <script>HIGHLIGHT_SCRIPT;</script>
+    <script>MARKDOWNIT_SCRIPT;</script>
+    <script>MORPHDOM_SCRIPT;</script>
+    <script>PUNYCODE_SCRIPT;</script>
     <style>PLACEHOLDER_STYLESHEET</style>
     <script>
       // This script is injected into the web view to enable code blocks
@@ -92,11 +96,6 @@
           linkify: true,
           typographer: true,
         })
-        /* .use(window.markdownitMark) */
-        /* .use(window.markdownitTaskLists) */
-        /* .use(window.markdownitSub) */
-        /*  .use(window.markdownitSup) */
-        /* .use(window.markdownitFootnote) */
         .use(window.texmath, {
           engine: window.katex,
           delimiters: ['dollars', 'brackets', 'doxygen', 'gitlab', 'julia', 'kramdown', 'beg_end'],

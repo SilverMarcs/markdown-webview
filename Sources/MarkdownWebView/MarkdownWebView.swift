@@ -113,12 +113,20 @@ public struct MarkdownWebView: PlatformViewRepresentable {
             // Load the HTML template and resources
             guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: "html"),
                   let templateString = try? String(contentsOf: templateFileURL),
-                  let scriptFileURL = Bundle.module.url(forResource: "script", withExtension: "js"),
-                  let script = try? String(contentsOf: scriptFileURL),
                   let katexScriptFileURL = Bundle.module.url(forResource: "katex", withExtension: "js"),
                   let katexScript = try? String(contentsOf: katexScriptFileURL),
                   let texmathScriptFileURL = Bundle.module.url(forResource: "texmath", withExtension: "js"),
                   let texmathScript = try? String(contentsOf: texmathScriptFileURL),
+                  let clipboardScriptFileURL = Bundle.module.url(forResource: "clipboard", withExtension: "js"),
+                  let clipboardScript = try? String(contentsOf: clipboardScriptFileURL),
+                  let highlightScriptFileURL = Bundle.module.url(forResource: "highlight", withExtension: "js"),
+                  let highlightScript = try? String(contentsOf: highlightScriptFileURL),
+                  let markdownitScriptFileURL = Bundle.module.url(forResource: "markdownit", withExtension: "js"),
+                  let markdownitScript = try? String(contentsOf: markdownitScriptFileURL),
+                  let morphdomScriptFileURL = Bundle.module.url(forResource: "morphdom", withExtension: "js"),
+                  let morphdomScript = try? String(contentsOf: morphdomScriptFileURL),
+                  let punycodeScriptFileURL = Bundle.module.url(forResource: "punycode", withExtension: "js"),
+                  let punycodeScript = try? String(contentsOf: punycodeScriptFileURL),
                   let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: "css"),
                   let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL),
                   let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: "css"),
@@ -135,9 +143,13 @@ public struct MarkdownWebView: PlatformViewRepresentable {
 
             // Replace placeholders in the template
             let htmlString = templateString
-                .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: script)
                 .replacingOccurrences(of: "KATEX_SCRIPT", with: katexScript)
                 .replacingOccurrences(of: "TEXMATH_SCRIPT", with: texmathScript)
+                .replacingOccurrences(of: "CLIPBOARD_SCRIPT", with: clipboardScript)
+                .replacingOccurrences(of: "HIGHLIGHT_SCRIPT", with: highlightScript)
+                .replacingOccurrences(of: "MARKDOWNIT_SCRIPT", with: markdownitScript)
+                .replacingOccurrences(of: "MORPHDOM_SCRIPT", with: morphdomScript)
+                .replacingOccurrences(of: "PUNYCODE_SCRIPT", with: punycodeScript)
                 .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
 
             // Load the HTML string into the web view
