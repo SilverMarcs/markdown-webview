@@ -273,17 +273,17 @@
 #markdown-rendered code,
 #markdown-rendered samp {
     font-family: ui-monospace;
-    font-size: 0.95rem;
+    font-size: 0.91rem;
 }
 
 #markdown-rendered pre {
     margin-top: 0;
     margin-bottom: 0;
     font-family: ui-monospace;
-    font-size: 0.95rem;
+    font-size: 0.91rem;
     word-wrap: normal;
     overflow-x: scroll;
-    padding: 0.95rem;
+    padding: 0.91rem;
     background-color: var(--background);
     border-radius: 0.5rem;
     border: thin solid -apple-system-separator;
