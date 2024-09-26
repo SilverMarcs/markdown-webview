@@ -49,11 +49,11 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         guard !platformView.isLoading else { return }
         
         // Load the new stylesheet
-        if let customStylesheetFileURL = Bundle.module.url(forResource: self.customStylesheet.fileName, withExtension: ""),
-           let customStylesheet = try? String(contentsOf: customStylesheetFileURL) {
-            platformView.updateStylesheet(customStylesheet)
-        }
-        
+//        if let customStylesheetFileURL = Bundle.module.url(forResource: self.customStylesheet.fileName, withExtension: ""),
+//           let customStylesheet = try? String(contentsOf: customStylesheetFileURL) {
+//            platformView.updateStylesheet(customStylesheet)
+//        }
+//        
         platformView.updateMarkdownContent(markdownContent, highlightString: highlightString, fontSize: fontSize)
     }
 
@@ -88,45 +88,48 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                 }
             #endif
 
-            /// So that the `View` adjusts its height automatically.
             platformView.setContentHuggingPriority(.required, for: .vertical)
 
-            /// Disables scrolling.
             #if !os(macOS)
                 platformView.scrollView.isScrollEnabled = false
             #endif
 
-            /// Set transparent background.
             #if os(macOS)
                 platformView.setValue(false, forKey: "drawsBackground")
-            /// Equavalent to `.setValue(true, forKey: "drawsTransparentBackground")` on macOS 10.12 and before, which this library doesn't target.
             #else
                 platformView.isOpaque = false
             #endif
 
-            #if os(macOS) || targetEnvironment(macCatalyst)
-                let defaultStylesheetFileName = "default-macOS"
-            #else
-                let defaultStylesheetFileName = "default-iOS"
-            #endif
+            let defaultStylesheetFileName = self.getDefaultStylesheetFileName()
 
-            // Load the HTML template and resources
+            guard let resources = self.loadResources(defaultStylesheetFileName: defaultStylesheetFileName) else {
+                print("Failed to load resources.")
+                return
+            }
+
+            let combinedStylesheet = resources.defaultStylesheet + "\n" + resources.customStylesheet + "\n" + resources.style
+
+            let htmlString = resources.templateString
+                .replacingOccurrences(of: "CLIPBOARD_SCRIPT", with: resources.clipboardScript)
+                .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
+
+            let baseURL = URL(string: parent.baseURL)
+            platformView.loadHTMLString(htmlString, baseURL: baseURL)
+        }
+
+        private func getDefaultStylesheetFileName() -> String {
+            #if os(macOS) || targetEnvironment(macCatalyst)
+                return "default-macOS"
+            #else
+                return "default-iOS"
+            #endif
+        }
+
+        private func loadResources(defaultStylesheetFileName: String) -> (templateString: String, clipboardScript: String, defaultStylesheet: String, customStylesheet: String, style: String)? {
             guard let templateFileURL = Bundle.module.url(forResource: "template", withExtension: "html"),
                   let templateString = try? String(contentsOf: templateFileURL),
-                  let katexScriptFileURL = Bundle.module.url(forResource: "katex", withExtension: "js"),
-                  let katexScript = try? String(contentsOf: katexScriptFileURL),
-                  let texmathScriptFileURL = Bundle.module.url(forResource: "texmath", withExtension: "js"),
-                  let texmathScript = try? String(contentsOf: texmathScriptFileURL),
-                  let clipboardScriptFileURL = Bundle.module.url(forResource: "clipboard", withExtension: "js"),
+                  let clipboardScriptFileURL = Bundle.module.url(forResource: "script", withExtension: "js"),
                   let clipboardScript = try? String(contentsOf: clipboardScriptFileURL),
-                  let highlightScriptFileURL = Bundle.module.url(forResource: "highlight", withExtension: "js"),
-                  let highlightScript = try? String(contentsOf: highlightScriptFileURL),
-                  let markdownitScriptFileURL = Bundle.module.url(forResource: "markdownit", withExtension: "js"),
-                  let markdownitScript = try? String(contentsOf: markdownitScriptFileURL),
-                  let morphdomScriptFileURL = Bundle.module.url(forResource: "morphdom", withExtension: "js"),
-                  let morphdomScript = try? String(contentsOf: morphdomScriptFileURL),
-                  let punycodeScriptFileURL = Bundle.module.url(forResource: "punycode", withExtension: "js"),
-                  let punycodeScript = try? String(contentsOf: punycodeScriptFileURL),
                   let defaultStylesheetFileURL = Bundle.module.url(forResource: defaultStylesheetFileName, withExtension: "css"),
                   let defaultStylesheet = try? String(contentsOf: defaultStylesheetFileURL),
                   let customStylesheetFileURL = Bundle.module.url(forResource: self.parent.customStylesheet.fileName, withExtension: "css"),
@@ -134,30 +137,11 @@ public struct MarkdownWebView: PlatformViewRepresentable {
                   let styleFileURL = Bundle.module.url(forResource: "commonStyle", withExtension: "css"),
                   let style = try? String(contentsOf: styleFileURL)
             else {
-                print("Failed to load resources.")
-                return
+                return nil
             }
-
-            // Combine the default stylesheet with the custom style file
-            let combinedStylesheet = defaultStylesheet + "\n" + customStylesheet + "\n" + style
-
-            // Replace placeholders in the template
-            let htmlString = templateString
-                .replacingOccurrences(of: "KATEX_SCRIPT", with: katexScript)
-                .replacingOccurrences(of: "TEXMATH_SCRIPT", with: texmathScript)
-                .replacingOccurrences(of: "CLIPBOARD_SCRIPT", with: clipboardScript)
-                .replacingOccurrences(of: "HIGHLIGHT_SCRIPT", with: highlightScript)
-                .replacingOccurrences(of: "MARKDOWNIT_SCRIPT", with: markdownitScript)
-                .replacingOccurrences(of: "MORPHDOM_SCRIPT", with: morphdomScript)
-                .replacingOccurrences(of: "PUNYCODE_SCRIPT", with: punycodeScript)
-                .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
-
-            // Load the HTML string into the web view
-            let baseURL = URL(string: parent.baseURL)
-            platformView.loadHTMLString(htmlString, baseURL: baseURL)
+            return (templateString, clipboardScript, defaultStylesheet, customStylesheet, style)
         }
 
-        /// Update the content on first finishing loading.
         public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
             (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString, fontSize: parent.fontSize)
             
