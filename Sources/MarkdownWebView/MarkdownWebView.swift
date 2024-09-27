@@ -17,7 +17,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
     let baseURL: String // Shows up on activity monitor
     let fontSize: CGFloat
 
-    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: MarkdownTheme = .github, fontSize: CGFloat = 13) {
+    public init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String? = nil, customStylesheet: MarkdownTheme = .atom, fontSize: CGFloat = 13) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.highlightString = highlightString
@@ -27,7 +27,7 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         renderedContentHandler = nil
     }
 
-    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: MarkdownTheme = .github, fontSize: CGFloat, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
+    init(_ markdownContent: String, baseURL: String = "Web Content", highlightString: String?, customStylesheet: MarkdownTheme = .atom, fontSize: CGFloat, linkActivationHandler: ((URL) -> Void)?, renderedContentHandler: ((String) -> Void)?) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
         self.linkActivationHandler = linkActivationHandler
@@ -102,15 +102,12 @@ public struct MarkdownWebView: PlatformViewRepresentable {
 
             let defaultStylesheetFileName = self.getDefaultStylesheetFileName()
 
-            guard let resources = self.loadResources(defaultStylesheetFileName: defaultStylesheetFileName) else {
-                print("Failed to load resources.")
-                return
-            }
-
-            let combinedStylesheet = resources.defaultStylesheet + "\n" + resources.customStylesheet + "\n" + resources.style
+            let resources = ResourceLoader.shared
+            let customStylesheet = resources.customStylesheets[parent.customStylesheet] ?? ""
+            let combinedStylesheet = resources.defaultStylesheet + "\n" + customStylesheet + "\n" + resources.style
 
             let htmlString = resources.templateString
-                .replacingOccurrences(of: "CLIPBOARD_SCRIPT", with: resources.clipboardScript)
+                .replacingOccurrences(of: "PLACEHOLDER_SCRIPT", with: resources.clipboardScript)
                 .replacingOccurrences(of: "PLACEHOLDER_STYLESHEET", with: combinedStylesheet)
 
             let baseURL = URL(string: parent.baseURL)
@@ -295,5 +292,34 @@ public enum MarkdownTheme: String, Codable, CaseIterable {
         case .tokyo:
             return "Tokyo"
         }
+    }
+}
+
+struct ResourceLoader {
+    static let shared = ResourceLoader()
+
+    let templateString: String
+    let clipboardScript: String
+    let defaultStylesheet: String
+    let customStylesheets: [MarkdownTheme: String]
+    let style: String
+
+    private init() {
+        templateString = ResourceLoader.loadResource(named: "template", withExtension: "html")
+        clipboardScript = ResourceLoader.loadResource(named: "script", withExtension: "js")
+        defaultStylesheet = ResourceLoader.loadResource(named: "default-macOS", withExtension: "css")
+        style = ResourceLoader.loadResource(named: "commonStyle", withExtension: "css")
+        
+        customStylesheets = Dictionary(uniqueKeysWithValues: MarkdownTheme.allCases.map {
+            ($0, ResourceLoader.loadResource(named: $0.fileName, withExtension: "css"))
+        })
+    }
+
+    private static func loadResource(named name: String, withExtension ext: String) -> String {
+        guard let url = Bundle.module.url(forResource: name, withExtension: ext),
+              let content = try? String(contentsOf: url) else {
+            return ""
+        }
+        return content
     }
 }
