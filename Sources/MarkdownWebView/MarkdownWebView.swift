@@ -10,10 +10,8 @@ import WebKit
 @available(macOS 11.0, iOS 14.0, *)
 public struct MarkdownWebView: PlatformViewRepresentable {
     var markdownContent: String
-    let customStylesheet: MarkdownTheme // New property for the custom stylesheet
-    let linkActivationHandler: ((URL) -> Void)?
-    let renderedContentHandler: ((String) -> Void)?
-    let highlightString: String? // New property for the highlight string
+    let customStylesheet: MarkdownTheme
+    let highlightString: String? // Pass if want to highlight substrings
     let baseURL: String // Shows up on activity monitor
     let fontSize: CGFloat
 
@@ -22,14 +20,10 @@ public struct MarkdownWebView: PlatformViewRepresentable {
         baseURL: String = "Web Content",
         highlightString: String? = nil,
         customStylesheet: MarkdownTheme = .atom,
-        fontSize: CGFloat = 13,
-        linkActivationHandler: ((URL) -> Void)? = nil,
-        renderedContentHandler: ((String) -> Void)? = nil
+        fontSize: CGFloat = 13
     ) {
         self.markdownContent = markdownContent
         self.customStylesheet = customStylesheet
-        self.linkActivationHandler = linkActivationHandler
-        self.renderedContentHandler = renderedContentHandler
         self.highlightString = highlightString
         self.baseURL = baseURL
         self.fontSize = fontSize

@@ -33,38 +33,21 @@ public class Coordinator: NSObject, WKNavigationDelegate {
     
     private func loadInitialHTML() {
         let resources = ResourceLoader.shared
-        let customStylesheet = resources.customStylesheets[parent.customStylesheet] ?? ""
-        let combinedStylesheet = resources.defaultStylesheet + "\n" + customStylesheet + "\n" + resources.style
-
-        let replacements = [
-            "PLACEHOLDER_SCRIPT": resources.clipboardScript,
-            "PLACEHOLDER_STYLESHEET": combinedStylesheet
-        ]
-
-        var htmlString = resources.templateString
-        for (placeholder, replacement) in replacements {
-            htmlString = htmlString.replacingOccurrences(of: placeholder, with: replacement)
-        }
-
+        let htmlString = resources.getCachedHTMLString(for: parent.customStylesheet)
+        
         let baseURL = URL(string: parent.baseURL)
         platformView.loadHTMLString(htmlString, baseURL: baseURL)
     }
 
     public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
         (webView as! CustomWebView).updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString, fontSize: parent.fontSize)
-        
-        self.parent.renderedContentHandler?("rendered")
     }
 
     public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
         if navigationAction.navigationType == .linkActivated {
             guard let url = navigationAction.request.url else { return .cancel }
 
-            if let linkActivationHandler = parent.linkActivationHandler {
-                linkActivationHandler(url)
-            } else {
-                openPlatformURL(url)
-            }
+            openPlatformURL(url)
 
             return .cancel
         } else {
