@@ -22,6 +22,19 @@
         body::-webkit-scrollbar {
           display: none !important;
         }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        #markdown-rendered {
+          animation: fadeIn 150ms ease-in forwards;
+        }
     </style>
     <script>
       // This script is injected into the web view to enable code blocks
