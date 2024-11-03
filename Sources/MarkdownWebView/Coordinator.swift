@@ -37,18 +37,9 @@ public class Coordinator: NSObject, WKNavigationDelegate {
         platformView.isOpaque = false
         #endif
     }
-    
-    private func loadInitialHTML() {
-        let resources = ResourceLoader.shared
-        let htmlString = resources.getCachedHTMLString()
-        
-        let baseURL = URL(string: parent.baseURL)
-        platformView.loadHTMLString(htmlString, baseURL: baseURL)
-    }
 
     public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
         let customWebView = webView as! CustomWebView
-        customWebView.hidePlainTextContent()
         customWebView.updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString, fontSize: parent.fontSize)
     }
     

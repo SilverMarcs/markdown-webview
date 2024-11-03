@@ -10,69 +10,39 @@ import SwiftUI
 
 public class CustomWebView: WKWebView {
     var contentHeight: CGFloat = 0
-    private var plainTextView: NSTextView?
     
     override public var intrinsicContentSize: CGSize {
         .init(width: super.intrinsicContentSize.width, height: contentHeight)
     }
     
     func showPlainTextContent(_ content: String) {
-        if plainTextView == nil {
-            plainTextView = NSTextView(frame: bounds)
-            plainTextView?.drawsBackground = false
-            plainTextView?.isEditable = false
-            plainTextView?.isSelectable = false
-            plainTextView?.autoresizingMask = [.width]
-            plainTextView?.font = NSFont.systemFont(ofSize: NSFont.systemFontSize + 0.5)
-            // invisible text
-            plainTextView?.textColor = NSColor.clear
-            // text color is slightly less bright than the default text color
-//            plainTextView?.textColor = NSColor(calibratedWhite: 0.8, alpha: 0)
-            plainTextView?.textContainer?.lineFragmentPadding = 0
-            plainTextView?.textContainerInset = NSSize(width: 0, height: 9)
-        }
+        let layoutManager = NSLayoutManager()
+        let textContainer = NSTextContainer(containerSize: CGSize(width: bounds.width, height: CGFloat.greatestFiniteMagnitude))
+        let textStorage = NSTextStorage(string: content)
         
-        plainTextView?.string = content
-        addSubview(plainTextView!)
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
         
-        if let plainTextView = plainTextView,
-           let textContainer = plainTextView.textContainer,
-           let layoutManager = plainTextView.layoutManager {
-            // Calculate total padding
-            let insetWidth = plainTextView.textContainerInset.width * 2
-            let fragmentPadding = textContainer.lineFragmentPadding * 2
-            let totalPadding = insetWidth + fragmentPadding
-            
-            // Set the container size to the available width minus padding and infinite height
-            let containerWidth = bounds.width - totalPadding
-            textContainer.containerSize = CGSize(width: containerWidth, height: CGFloat.greatestFiniteMagnitude)
-            
-            // Force layout
-            layoutManager.ensureLayout(for: textContainer)
-            
-            // Get used rectangle
-            let usedRect = layoutManager.usedRect(for: textContainer)
-            let newHeight = usedRect.height + plainTextView.textContainerInset.height * 2
-            
-            // Update frame
-            plainTextView.frame = CGRect(x: 0, y: 0, width: bounds.width, height: newHeight)
-            
-            // Update the content height and invalidate intrinsic content size
-            contentHeight = newHeight
-            invalidateIntrinsicContentSize()
-            
-            // Notify the parent view that our size has changed
-            superview?.needsLayout = true
-        }
+        textContainer.lineFragmentPadding = 0
+        
+        let font = NSFont.systemFont(ofSize: NSFont.systemFontSize + 0.5)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font
+        ]
+        textStorage.setAttributes(attributes, range: NSRange(location: 0, length: textStorage.length))
+        
+        layoutManager.ensureLayout(for: textContainer)
+        
+        let usedRect = layoutManager.usedRect(for: textContainer)
+        let newHeight = usedRect.height
+        
+        // Update the content height and invalidate intrinsic content size
+        contentHeight = newHeight
+        invalidateIntrinsicContentSize()
+        
+        // Notify the parent view that our size has changed
+        superview?.needsLayout = true
     }
-     
-     func hidePlainTextContent() {
-//         DispatchQueue.main.asyncAfter(deadline: .now() + 7) {
-         self.plainTextView?.removeFromSuperview()
-         self.invalidateIntrinsicContentSize()
-         self.superview?.needsLayout = true
-//         }
-     }
     
     /// Disables scrolling.
     #if os(macOS)
