@@ -143,6 +143,15 @@
         // Create a temporary element to hold the new rendered content
         const tempElement = document.createElement("div");
         tempElement.innerHTML = renderedContent;
+        
+        // Clean up the temporary DOM to remove unwanted <p> tags inside <li> elements
+        tempElement.querySelectorAll("li > p").forEach((pTag) => {
+          const li = pTag.parentNode;
+          while (pTag.firstChild) {
+            li.insertBefore(pTag.firstChild, pTag);
+          }
+          pTag.remove();
+        });
 
         // Use morphdom to update the content without losing the text selection
         morphdom(markdownRenderedElement, tempElement, {
