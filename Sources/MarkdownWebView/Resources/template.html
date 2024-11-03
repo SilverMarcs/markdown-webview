@@ -22,15 +22,6 @@
         body::-webkit-scrollbar {
           display: none !important;
         }
-
-        /*for searchstring*/
-        .highlight {
-          padding: 0.1em 0;
-          margin: 0;
-          white-space: break-spaces;
-          background-color: #857524;
-          border-radius: 3px;
-        }
     </style>
     <script>
       // This script is injected into the web view to enable code blocks
@@ -96,17 +87,6 @@
   <body>
     <div id="markdown-rendered"></div>
     <script>
-      // Optimized Base64 decoding function
-      function decodeBase64(base64String) {
-        const binaryString = atob(base64String);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        return new TextDecoder().decode(bytes);
-      }
-
       const markdownIt = window
         .markdownit({
           highlight: function (str, lang) {
@@ -137,55 +117,37 @@
         .use(window.markdownitCodeCopy);
 
       const markdownRenderedElement = document.getElementById(`markdown-rendered`);
-
-      window.updateWithMarkdownContentBase64Encoded = (
-        markdownContentBase64Encoded,
-        highlightStringBase64Encoded,
-        fontSize,
-      ) => {
-        // Decode the Base64-encoded markdown content
-        const markdownContent = decodeBase64(markdownContentBase64Encoded);
+        
+        function highlightText(text, highlightString) {
+          if (!highlightString) return text;
+          
+          const regex = new RegExp(highlightString, 'gi');
+          return text.replace(regex, '<mark style="background-color: yellow; color: black;">$&</mark>');
+        }
+      
+      window.updateWithMarkdownContent = (data) => {
+        const { markdownContent, highlightString, fontSize } = data;
         let renderedContent = markdownIt.render(markdownContent);
 
         // Highlight the text if a highlight string is provided
-        if (highlightStringBase64Encoded) {
-          const highlightString = decodeBase64(highlightStringBase64Encoded);
-          if (highlightString.trim() !== "") {
-            const escapedHighlightString = highlightString.replace(
-              /[.*+?^${}()|[\]\\]/g,
-              "\\$&"
-            );
-            const regex = new RegExp(escapedHighlightString, "gi");
-            renderedContent = renderedContent.replace(
-              regex,
-              (match) => `<span class="highlight">${match}</span>`
-            );
-          }
+        if (highlightString) {
+          renderedContent = highlightText(renderedContent, highlightString);
         }
 
         // Update the base font size
         document.documentElement.style.setProperty(
           "--base-font-size",
-          `${fontSize}px`,
+          `${fontSize}px`
         );
-
+        
         // Create a temporary element to hold the new rendered content
         const tempElement = document.createElement("div");
         tempElement.innerHTML = renderedContent;
 
-        // Clean up the temporary DOM to remove unwanted <p> tags inside <li> elements
-        tempElement.querySelectorAll("li > p").forEach((pTag) => {
-          const li = pTag.parentNode;
-          while (pTag.firstChild) {
-            li.insertBefore(pTag.firstChild, pTag);
-          }
-          pTag.remove();
-        });
-
         // Use morphdom to update the content without losing the text selection
         morphdom(markdownRenderedElement, tempElement, {
           onBeforeElUpdated: function (fromEl, toEl) {
-              // spec - https://dom.spec.whatwg.org/#concept-node-equals
+            // spec - https://dom.spec.whatwg.org/#concept-node-equals
             // Prevent updating if nodes are equal
             if (fromEl.isEqualNode(toEl)) {
               return false;
@@ -197,11 +159,6 @@
             return true;
           },
         });
-
-        // Notify the webkit handler that content has been rendered
-        window.webkit.messageHandlers.renderedContentHandler.postMessage(
-          markdownContentBase64Encoded,
-        );
       };
     </script>
   </body>

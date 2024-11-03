@@ -30,12 +30,21 @@ public class CustomWebView: WKWebView {
         }
     #endif
 
-    func updateMarkdownContent(_ markdownContent: String, highlightString: String?, fontSize: CGFloat) {
-        guard let markdownContentBase64Encoded = markdownContent.data(using: .utf8)?.base64EncodedString() else { return }
+    func updateMarkdownContent(_ markdownContent: String, highlightString: String, fontSize: CGFloat) {
+        let data: [String: Any] = [
+            "markdownContent": markdownContent,
+            "highlightString": highlightString,
+            "fontSize": fontSize
+        ]
         
-        let highlightStringBase64Encoded = highlightString?.data(using: .utf8)?.base64EncodedString() ?? ""
-
-        callAsyncJavaScript("window.updateWithMarkdownContentBase64Encoded(`\(markdownContentBase64Encoded)`, `\(highlightStringBase64Encoded)`, \(fontSize))", in: nil, in: .page, completionHandler: nil)
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: data)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                callAsyncJavaScript("window.updateWithMarkdownContent(\(jsonString))", in: nil, in: .page, completionHandler: nil)
+            }
+        } catch {
+            print("Error converting to JSON: \(error)")
+        }
         
         evaluateJavaScript("document.body.scrollHeight", in: nil, in: .page) { result in
             guard let contentHeight = try? result.get() as? Double else { return }
