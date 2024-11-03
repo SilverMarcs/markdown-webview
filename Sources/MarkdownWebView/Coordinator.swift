@@ -33,7 +33,7 @@ public class Coordinator: NSObject, WKNavigationDelegate {
     
     private func loadInitialHTML() {
         let resources = ResourceLoader.shared
-        let htmlString = resources.getCachedHTMLString(for: parent.customStylesheet)
+        let htmlString = resources.getCachedHTMLString()
         
         let baseURL = URL(string: parent.baseURL)
         platformView.loadHTMLString(htmlString, baseURL: baseURL)

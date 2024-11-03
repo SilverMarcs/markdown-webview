@@ -43,45 +43,4 @@ public class CustomWebView: WKWebView {
             self.invalidateIntrinsicContentSize()
         }
     }
-    
-    func updateStylesheet(_ stylesheet: String) {
-        let script = """
-        (function() {
-            var style = document.createElement('style');
-            style.textContent = `\(stylesheet)`;
-            document.head.appendChild(style);
-        })();
-        """
-        evaluateJavaScript(script, completionHandler: nil)
-    }
-
-    #if os(macOS)
-        override public func keyDown(with event: NSEvent) {
-            nextResponder?.keyDown(with: event)
-        }
-
-        override public func keyUp(with event: NSEvent) {
-            nextResponder?.keyUp(with: event)
-        }
-
-        override public func flagsChanged(with event: NSEvent) {
-            nextResponder?.flagsChanged(with: event)
-        }
-
-    #else
-        override public func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            super.pressesBegan(presses, with: event)
-            next?.pressesBegan(presses, with: event)
-        }
-
-        override public func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            super.pressesEnded(presses, with: event)
-            next?.pressesEnded(presses, with: event)
-        }
-
-        override public func pressesChanged(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-            super.pressesChanged(presses, with: event)
-            next?.pressesChanged(presses, with: event)
-        }
-    #endif
 }

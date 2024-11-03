@@ -13,12 +13,7 @@ class ResourceLoader {
 
     lazy var templateString: String = Self.loadResource(named: "template", withExtension: "html")
     lazy var clipboardScript: String = Self.loadResource(named: "script", withExtension: "js")
-    lazy var defaultStylesheet: String = Self.loadResource(named: Self.getDefaultStylesheetFileName(), withExtension: "css")
-    lazy var style: String = Self.loadResource(named: "commonStyle", withExtension: "css")
-    
-    lazy var customStylesheets: [MarkdownTheme: String] = Dictionary(uniqueKeysWithValues: MarkdownTheme.allCases.map {
-        ($0, Self.loadResource(named: $0.fileName, withExtension: "css"))
-    })
+    lazy var style: String = Self.loadResource(named: Self.styleSheetFileName, withExtension: "css")
 
     private var cachedHTMLString: String?
 
@@ -35,14 +30,11 @@ class ResourceLoader {
         }
     }
 
-    func getCachedHTMLString(for customStylesheet: MarkdownTheme) -> String {
+    func getCachedHTMLString() -> String {
         if cachedHTMLString == nil {
-            let customStylesheetContent = customStylesheets[customStylesheet] ?? ""
-            let combinedStylesheet = defaultStylesheet + "\n" + customStylesheetContent + "\n" + style
-
             let replacements = [
                 "PLACEHOLDER_SCRIPT": clipboardScript,
-                "PLACEHOLDER_STYLESHEET": combinedStylesheet
+                "PLACEHOLDER_STYLESHEET": style
             ]
 
             var htmlString = templateString
@@ -53,14 +45,12 @@ class ResourceLoader {
             cachedHTMLString = htmlString
         }
         
-        return cachedHTMLString! // TODO: use if let or guard let
+        return cachedHTMLString!
     }
-    
-    private static func getDefaultStylesheetFileName() -> String {
-        #if os(macOS) || targetEnvironment(macCatalyst)
-            return "default-macOS"
-        #else
-            return "default-iOS"
-        #endif
-    }
+
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    static let styleSheetFileName = "default-macOS"
+    #else
+    static let styleSheetFileName = "default-iOS"
+    #endif
 }

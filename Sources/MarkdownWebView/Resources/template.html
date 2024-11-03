@@ -8,6 +8,30 @@
     />
     <script>PLACEHOLDER_SCRIPT</script>
     <style>PLACEHOLDER_STYLESHEET</style>
+    <style>
+        :root {
+          color-scheme: light dark !important;
+        }
+
+        html,
+        body {
+          overscroll-behavior: none !important;
+          margin: 0 !important;
+        }
+
+        body::-webkit-scrollbar {
+          display: none !important;
+        }
+
+        /*for searchstring*/
+        .highlight {
+          padding: 0.1em 0;
+          margin: 0;
+          white-space: break-spaces;
+          background-color: #857524;
+          border-radius: 3px;
+        }
+    </style>
     <script>
       // This script is injected into the web view to enable code blocks
       (function (window) {
@@ -145,11 +169,6 @@
           `${fontSize}px`,
         );
 
-<!--        window.updateStylesheet = (newStylesheet) => {-->
-<!--          const styleElement = document.getElementById("custom-stylesheet");-->
-<!--          styleElement.textContent = newStylesheet;-->
-<!--        };-->
-
         // Create a temporary element to hold the new rendered content
         const tempElement = document.createElement("div");
         tempElement.innerHTML = renderedContent;
@@ -184,13 +203,6 @@
           markdownContentBase64Encoded,
         );
       };
-
-<!--      const resizeObserver = new ResizeObserver((entries) => {-->
-<!--        window.webkit.messageHandlers.sizeChangeHandler.postMessage(-->
-<!--          entries[0].borderBoxSize[0].blockSize,-->
-<!--        );-->
-<!--      });-->
-<!--      resizeObserver.observe(markdownRenderedElement);-->
     </script>
   </body>
 </html>
