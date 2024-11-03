@@ -17,7 +17,11 @@ public class CustomWebView: WKWebView {
     
     func showPlainTextContent(_ content: String) {
         let layoutManager = NSLayoutManager()
+        #if os(macOS)
         let textContainer = NSTextContainer(containerSize: CGSize(width: bounds.width, height: CGFloat.greatestFiniteMagnitude))
+        #else
+        let textContainer = NSTextContainer(size: CGSize(width: bounds.width, height: CGFloat.greatestFiniteMagnitude))
+        #endif
         let textStorage = NSTextStorage(string: content)
         
         layoutManager.addTextContainer(textContainer)
@@ -25,7 +29,11 @@ public class CustomWebView: WKWebView {
         
         textContainer.lineFragmentPadding = 0
         
+        #if os(iOS)
+        let font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 0.5)
+        #else
         let font = NSFont.systemFont(ofSize: NSFont.systemFontSize + 0.5)
+        #endif
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font
         ]
@@ -41,22 +49,24 @@ public class CustomWebView: WKWebView {
         invalidateIntrinsicContentSize()
         
         // Notify the parent view that our size has changed
+        #if os(macOS)
         superview?.needsLayout = true
+        #else
+        superview?.setNeedsLayout()
+        #endif
     }
     
     /// Disables scrolling.
     #if os(macOS)
-        override public func scrollWheel(with event: NSEvent) {
-            super.scrollWheel(with: event)
-            nextResponder?.scrollWheel(with: event)
-        }
-    #endif
+    override public func scrollWheel(with event: NSEvent) {
+        super.scrollWheel(with: event)
+        nextResponder?.scrollWheel(with: event)
+    }
 
     /// Removes "Reload" from the context menu.
-    #if os(macOS)
-        override public func willOpenMenu(_ menu: NSMenu, with _: NSEvent) {
-            menu.items.removeAll { $0.identifier == .init("WKMenuItemIdentifierReload") }
-        }
+    override public func willOpenMenu(_ menu: NSMenu, with _: NSEvent) {
+        menu.items.removeAll { $0.identifier == .init("WKMenuItemIdentifierReload") }
+    }
     #endif
 
     func updateMarkdownContent(_ markdownContent: String, highlightString: String, fontSize: CGFloat) {
