@@ -8,7 +8,7 @@ import WebKit
 #endif
 
 @available(macOS 11.0, iOS 14.0, *)
-public struct MarkdownWebView: PlatformViewRepresentable {
+public struct SwiftMarkdownView: PlatformViewRepresentable {
     var markdownContent: String
     
     @Environment(\.markdownFontSize) var fontSize

@@ -12,10 +12,6 @@ private struct MarkdownFontSizeKey: EnvironmentKey {
     static let defaultValue: CGFloat = 13
 }
 
-//private struct MarkdownThemeKey: EnvironmentKey {
-//    static let defaultValue: MarkdownTheme = .atom
-//}
-
 private struct MarkdownHighlightStringKey: EnvironmentKey {
     static let defaultValue: String = ""
 }
@@ -29,11 +25,6 @@ extension EnvironmentValues {
         get { self[MarkdownFontSizeKey.self] }
         set { self[MarkdownFontSizeKey.self] = newValue }
     }
-    
-//    var markdownTheme: MarkdownTheme {
-//        get { self[MarkdownThemeKey.self] }
-//        set { self[MarkdownThemeKey.self] = newValue }
-//    }
     
     var markdownHighlightString: String {
         get { self[MarkdownHighlightStringKey.self] }
@@ -50,10 +41,7 @@ extension View {
     public func markdownFontSize(_ size: CGFloat) -> some View {
         environment(\.markdownFontSize, size)
     }
-    
-//    public func markdownTheme(_ theme: MarkdownTheme) -> some View {
-//        environment(\.markdownTheme, theme)
-//    }
+
     
     public func markdownHighlightString(_ string: String) -> some View {
         environment(\.markdownHighlightString, string)

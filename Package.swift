@@ -3,20 +3,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "markdown-webview",
+    name: "SwiftMarkdownView",
     platforms: [
         .macOS(.v11),
         .iOS(.v14),
     ],
     products: [
         .library(
-            name: "MarkdownWebView",
-            targets: ["MarkdownWebView"]
+            name: "SwiftMarkdownView",
+            targets: ["SwiftMarkdownView"]
         ),
     ],
     targets: [
         .target(
-            name: "MarkdownWebView",
+            name: "SwiftMarkdownView",
             resources: [
               .process("Resources")
             ]
