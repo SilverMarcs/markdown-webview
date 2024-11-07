@@ -16,7 +16,7 @@ public class CustomWebView: WKWebView {
         .init(width: super.intrinsicContentSize.width, height: contentHeight)
     }
     
-    func showPlainTextContent(_ content: String) {
+    func showPlainTextContent(_ content: String, renderSkeleton: Bool) {
         let layoutManager = NSLayoutManager()
         #if os(macOS)
         let textContainer = NSTextContainer(containerSize: CGSize(width: bounds.width, height: CGFloat.greatestFiniteMagnitude))
@@ -30,7 +30,7 @@ public class CustomWebView: WKWebView {
         
         textContainer.lineFragmentPadding = 0
         
-        let font = PlatformFont.systemFont(ofSize: PlatformFont.systemFontSize + 3) // extra size since webview text includes styling that takes up more space
+        let font = PlatformFont.systemFont(ofSize: PlatformFont.systemFontSize + 5) // extra size since webview text includes styling that takes up more space
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font
         ]
@@ -46,9 +46,11 @@ public class CustomWebView: WKWebView {
         invalidateIntrinsicContentSize()
         
         // Create and add the skeleton layer TODO: explore if this is necessary
-//        DispatchQueue.main.async {
-//            self.showSkeletonView()
-//        }
+        if renderSkeleton {
+            DispatchQueue.main.async {
+                self.showSkeletonView()
+            }
+        }
         
         // Notify the parent view that our size has changed
         #if os(macOS)
@@ -75,7 +77,7 @@ public class CustomWebView: WKWebView {
         skeletonView.fadeOut {
             skeletonView.isHidden = true
              skeletonView.removeFromSuperview()
-             self.skeletonView = nil
+//             self.skeletonView = nil
         }
     }
     
@@ -92,7 +94,7 @@ public class CustomWebView: WKWebView {
     }
     #endif
 
-    func updateMarkdownContent(_ markdownContent: String, highlightString: String, fontSize: CGFloat) {
+    func updateMarkdownContent(_ markdownContent: String, highlightString: String, fontSize: CGFloat, renderSkeleton: Bool) {
         let data: [String: Any] = [
             "markdownContent": markdownContent,
             "highlightString": highlightString,
@@ -134,7 +136,7 @@ class SkeletonView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         
-        let color = NSColor.lightGray.withAlphaComponent(0.3).cgColor
+        let color = NSColor.lightGray.withAlphaComponent(0.2).cgColor
         context.setFillColor(color)
         
         for rect in blockRects {
