@@ -15,17 +15,15 @@ public class Coordinator: NSObject, WKNavigationDelegate {
     init(parent: SwiftMarkdownView) {
         self.parent = parent
         self.platformView = .init()
-        // if we were to make the loading of html in bg thread, should we put showplaintxt func call before it or after it?
+        super.init()
+        
         platformView.showPlainTextContent(parent.markdownContent)
         
         let resources = ResourceLoader.shared
         let htmlString = resources.getCachedHTMLString()
-        
         let baseURL = URL(string: parent.baseURL)
         platformView.loadHTMLString(htmlString, baseURL: baseURL)
-
-        super.init()
-
+    
         platformView.navigationDelegate = self
         platformView.setContentHuggingPriority(.required, for: .vertical)
 
@@ -40,6 +38,7 @@ public class Coordinator: NSObject, WKNavigationDelegate {
     public func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
         let customWebView = webView as! CustomWebView
         customWebView.updateMarkdownContent(parent.markdownContent, highlightString: parent.highlightString, fontSize: parent.fontSize)
+        customWebView.hideSkeletonLayer()
     }
     
     public func webView(_: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
