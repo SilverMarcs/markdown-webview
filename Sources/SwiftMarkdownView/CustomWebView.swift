@@ -10,7 +10,7 @@ import SwiftUI
 
 public class CustomWebView: WKWebView {
     var contentHeight: CGFloat = 0
-    var skeletonLayer: CALayer?
+    var skeletonView: SkeletonView?
     
     override public var intrinsicContentSize: CGSize {
         .init(width: super.intrinsicContentSize.width, height: contentHeight)
@@ -45,10 +45,10 @@ public class CustomWebView: WKWebView {
         contentHeight = newHeight
         invalidateIntrinsicContentSize()
         
-        // Create and add the skeleton layer
-        DispatchQueue.main.async {
-            self.createSkeletonLayer()
-        }
+        // Create and add the skeleton layer TODO: explore if this is necessary
+//        DispatchQueue.main.async {
+//            self.showSkeletonView()
+//        }
         
         // Notify the parent view that our size has changed
         #if os(macOS)
@@ -58,67 +58,24 @@ public class CustomWebView: WKWebView {
         #endif
     }
     
-    private func createSkeletonLayer() {
-        // Remove existing skeleton layer if any
-        skeletonLayer?.removeFromSuperlayer()
-        
-        // Create a new container layer
-        let containerLayer = CALayer()
-        containerLayer.frame = bounds
-        
-        let blockHeight: CGFloat = 16
-        let blockSpacing: CGFloat = 8
-        let horizontalPadding: CGFloat = 16
-        let availableWidth = bounds.width - (2 * horizontalPadding)
-        
-        var yPosition: CGFloat = blockSpacing
-        
-        while yPosition < contentHeight - blockHeight {
-            let block = CALayer()
-            block.frame = CGRect(x: horizontalPadding, y: yPosition, width: availableWidth, height: blockHeight)
-            block.backgroundColor = PlatformColor.lightGray.withAlphaComponent(0.3).cgColor
-            block.cornerRadius = 4
-            containerLayer.addSublayer(block)
-            
-            yPosition += blockHeight + blockSpacing
+    func showSkeletonView() {
+        if skeletonView == nil {
+            skeletonView = SkeletonView(frame: bounds)
+            addSubview(skeletonView!)
         }
         
-        // Add the container layer to the view
-        #if os(macOS)
-        layer?.addSublayer(containerLayer)
-        #else
-        layer.addSublayer(containerLayer)
-        #endif
-        skeletonLayer = containerLayer
+        skeletonView?.alphaValue = 1.0 // Ensure full opacity when showing
+        skeletonView?.updateSkeleton(for: contentHeight)
+        skeletonView?.isHidden = false
     }
     
-    private func createSkeletonBlock(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> CALayer {
-        let block = CALayer()
-        block.frame = CGRect(x: x, y: y, width: width, height: height)
-        block.backgroundColor = PlatformColor.lightGray.withAlphaComponent(0.3).cgColor
-        block.cornerRadius = 4
-        return block
-    }
-    
-    func hideSkeletonLayer() {
-        guard let skeletonLayer = skeletonLayer else { return }
+    func hideSkeletonView() {
+        guard let skeletonView = skeletonView, !skeletonView.isHidden else { return }
         
-        // Create a fade out animation
-        let fadeOutAnimation = CABasicAnimation(keyPath: "opacity")
-        fadeOutAnimation.fromValue = 1.0
-        fadeOutAnimation.toValue = 0.0
-        fadeOutAnimation.duration = 0.2 // Adjust duration as needed
-        
-        // Set the final state
-        skeletonLayer.opacity = 0.0
-        
-        // Add the animation to the layer
-        skeletonLayer.add(fadeOutAnimation, forKey: "fadeOut")
-        
-        // Remove the layer after the animation completes
-        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutAnimation.duration) {
-            skeletonLayer.removeFromSuperlayer()
-            self.skeletonLayer = nil
+        skeletonView.fadeOut {
+            skeletonView.isHidden = true
+             skeletonView.removeFromSuperview()
+             self.skeletonView = nil
         }
     }
     
@@ -170,3 +127,46 @@ typealias PlatformFont = NSFont
 #else
 typealias PlatformFont = UIFont
 #endif
+
+class SkeletonView: NSView {
+    private var blockRects: [CGRect] = []
+    
+    override func draw(_ dirtyRect: NSRect) {
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        
+        let color = NSColor.lightGray.withAlphaComponent(0.3).cgColor
+        context.setFillColor(color)
+        
+        for rect in blockRects {
+            let path = CGPath(roundedRect: rect, cornerWidth: 4, cornerHeight: 4, transform: nil)
+            context.addPath(path)
+            context.fillPath()
+        }
+    }
+    
+    func updateSkeleton(for contentHeight: CGFloat) {
+        let blockHeight: CGFloat = 16
+        let blockSpacing: CGFloat = 8
+        let horizontalPadding: CGFloat = 16
+        let availableWidth = bounds.width - (2 * horizontalPadding)
+        
+        var yPosition: CGFloat = blockSpacing
+        var newBlockRects: [CGRect] = []
+        
+        while yPosition < contentHeight - blockHeight {
+            let rect = CGRect(x: horizontalPadding, y: yPosition, width: availableWidth, height: blockHeight)
+            newBlockRects.append(rect)
+            yPosition += blockHeight + blockSpacing
+        }
+        
+        blockRects = newBlockRects
+        setNeedsDisplay(bounds)
+    }
+    
+    func fadeOut(completion: @escaping () -> Void) {
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.2
+            self.animator().alphaValue = 0
+        }, completionHandler: completion)
+    }
+}
