@@ -10,7 +10,7 @@ import SwiftUI
 
 public class CustomWebView: WKWebView {
     var contentHeight: CGFloat = 0
-    var skeletonLayer: CAShapeLayer?
+    var skeletonLayer: CALayer?
     
     override public var intrinsicContentSize: CGSize {
         .init(width: super.intrinsicContentSize.width, height: contentHeight)
@@ -18,7 +18,11 @@ public class CustomWebView: WKWebView {
     
     func showPlainTextContent(_ content: String) {
         let layoutManager = NSLayoutManager()
+        #if os(macOS)
         let textContainer = NSTextContainer(containerSize: CGSize(width: bounds.width, height: CGFloat.greatestFiniteMagnitude))
+        #else
+        let textContainer = NSTextContainer(size: CGSize(width: bounds.width, height: CGFloat.greatestFiniteMagnitude))
+        #endif
         let textStorage = NSTextStorage(string: content)
         
         layoutManager.addTextContainer(textContainer)
@@ -26,7 +30,7 @@ public class CustomWebView: WKWebView {
         
         textContainer.lineFragmentPadding = 0
         
-    let font = NSFont.systemFont(ofSize: NSFont.systemFontSize + 2.3)
+        let font = PlatformFont.systemFont(ofSize: PlatformFont.systemFontSize + 3) // extra size since webview text includes styling that takes up more space
         let attributes: [NSAttributedString.Key: Any] = [
             .font: font
         ]
@@ -47,7 +51,11 @@ public class CustomWebView: WKWebView {
         }
         
         // Notify the parent view that our size has changed
+        #if os(macOS)
         superview?.needsLayout = true
+        #else
+        superview?.setNeedsLayout()
+        #endif
     }
     
     private func createSkeletonLayer() {
@@ -55,7 +63,7 @@ public class CustomWebView: WKWebView {
         skeletonLayer?.removeFromSuperlayer()
         
         // Create a new container layer
-        let containerLayer = CAShapeLayer()
+        let containerLayer = CALayer()
         containerLayer.frame = bounds
         
         let blockHeight: CGFloat = 16
@@ -66,60 +74,28 @@ public class CustomWebView: WKWebView {
         var yPosition: CGFloat = blockSpacing
         
         while yPosition < contentHeight - blockHeight {
-            // Full-width block
-            let fullWidthBlock = createSkeletonBlock(
-                x: horizontalPadding,
-                y: yPosition,
-                width: availableWidth,
-                height: blockHeight
-            )
-            containerLayer.addSublayer(fullWidthBlock)
+            let block = CALayer()
+            block.frame = CGRect(x: horizontalPadding, y: yPosition, width: availableWidth, height: blockHeight)
+            block.backgroundColor = PlatformColor.lightGray.withAlphaComponent(0.3).cgColor
+            block.cornerRadius = 4
+            containerLayer.addSublayer(block)
+            
             yPosition += blockHeight + blockSpacing
-            
-            // Two half-width blocks
-            if yPosition < contentHeight - blockHeight {
-                let halfWidth = (availableWidth - blockSpacing) / 2
-                let leftBlock = createSkeletonBlock(
-                    x: horizontalPadding,
-                    y: yPosition,
-                    width: halfWidth,
-                    height: blockHeight
-                )
-                containerLayer.addSublayer(leftBlock)
-                
-                let rightBlock = createSkeletonBlock(
-                    x: horizontalPadding + halfWidth + blockSpacing,
-                    y: yPosition,
-                    width: halfWidth,
-                    height: blockHeight
-                )
-                containerLayer.addSublayer(rightBlock)
-                yPosition += blockHeight + blockSpacing
-            }
-            
-            // Shorter block
-            if yPosition < contentHeight - blockHeight {
-                let shortBlockWidth = availableWidth * 0.6
-                let shortBlock = createSkeletonBlock(
-                    x: horizontalPadding,
-                    y: yPosition,
-                    width: shortBlockWidth,
-                    height: blockHeight
-                )
-                containerLayer.addSublayer(shortBlock)
-                yPosition += blockHeight + blockSpacing
-            }
         }
         
         // Add the container layer to the view
+        #if os(macOS)
         layer?.addSublayer(containerLayer)
+        #else
+        layer.addSublayer(containerLayer)
+        #endif
         skeletonLayer = containerLayer
     }
     
-    private func createSkeletonBlock(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> CAShapeLayer {
-        let block = CAShapeLayer()
+    private func createSkeletonBlock(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> CALayer {
+        let block = CALayer()
         block.frame = CGRect(x: x, y: y, width: width, height: height)
-        block.backgroundColor = NSColor.lightGray.withAlphaComponent(0.3).cgColor
+        block.backgroundColor = PlatformColor.lightGray.withAlphaComponent(0.3).cgColor
         block.cornerRadius = 4
         return block
     }
@@ -182,3 +158,15 @@ public class CustomWebView: WKWebView {
         }
     }
 }
+
+#if os(macOS)
+typealias PlatformColor = NSColor
+#else
+typealias PlatformColor = UIColor
+#endif
+
+#if os(macOS)
+typealias PlatformFont = NSFont
+#else
+typealias PlatformFont = UIFont
+#endif
