@@ -1,12 +1,6 @@
 import SwiftUI
 import WebKit
 
-#if os(macOS)
-    typealias PlatformViewRepresentable = NSViewRepresentable
-#else
-    typealias PlatformViewRepresentable = UIViewRepresentable
-#endif
-
 @available(macOS 11.0, iOS 14.0, *)
 public struct SwiftMarkdownView: PlatformViewRepresentable {
     var markdownContent: String

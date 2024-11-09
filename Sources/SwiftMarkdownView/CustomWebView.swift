@@ -66,7 +66,12 @@ public class CustomWebView: WKWebView {
             addSubview(skeletonView!)
         }
         
+        #if os(macOS)
         skeletonView?.alphaValue = 1.0 // Ensure full opacity when showing
+        #else
+        skeletonView?.alpha = 1.0
+        #endif
+        
         skeletonView?.updateSkeleton(for: contentHeight)
         skeletonView?.isHidden = false
     }
@@ -115,60 +120,5 @@ public class CustomWebView: WKWebView {
             self.contentHeight = contentHeight
             self.invalidateIntrinsicContentSize()
         }
-    }
-}
-
-#if os(macOS)
-typealias PlatformColor = NSColor
-#else
-typealias PlatformColor = UIColor
-#endif
-
-#if os(macOS)
-typealias PlatformFont = NSFont
-#else
-typealias PlatformFont = UIFont
-#endif
-
-class SkeletonView: NSView {
-    private var blockRects: [CGRect] = []
-    
-    override func draw(_ dirtyRect: NSRect) {
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
-        
-        let color = NSColor.lightGray.withAlphaComponent(0.2).cgColor
-        context.setFillColor(color)
-        
-        for rect in blockRects {
-            let path = CGPath(roundedRect: rect, cornerWidth: 4, cornerHeight: 4, transform: nil)
-            context.addPath(path)
-            context.fillPath()
-        }
-    }
-    
-    func updateSkeleton(for contentHeight: CGFloat) {
-        let blockHeight: CGFloat = 16
-        let blockSpacing: CGFloat = 8
-        let horizontalPadding: CGFloat = 16
-        let availableWidth = bounds.width - (2 * horizontalPadding)
-        
-        var yPosition: CGFloat = blockSpacing
-        var newBlockRects: [CGRect] = []
-        
-        while yPosition < contentHeight - blockHeight {
-            let rect = CGRect(x: horizontalPadding, y: yPosition, width: availableWidth, height: blockHeight)
-            newBlockRects.append(rect)
-            yPosition += blockHeight + blockSpacing
-        }
-        
-        blockRects = newBlockRects
-        setNeedsDisplay(bounds)
-    }
-    
-    func fadeOut(completion: @escaping () -> Void) {
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.2
-            self.animator().alphaValue = 0
-        }, completionHandler: completion)
     }
 }
